@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cubing_Stopwatch_By:Sub_In_A_Sub</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load JetBrains Mono for authentic developer monospace typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            bg: '#06080a',
+                            surface: '#0d1117',
+                            border: '#1f2937',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            cyan: '#06b6d4',
+                            rose: '#f43f5e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-cyber-bg text-slate-200 font-mono h-screen w-screen overflow-hidden select-none antialiased relative">
+
+    <!-- Subtle Developer Grid Background (SVG pattern for pure Tailwind/HTML compliance) -->
+    <div class="absolute inset-0 pointer-events-none opacity-20">
+        <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="dev-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+                    <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#334155" stroke-width="0.75"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dev-grid)" />
+        </svg>
+    </div>
+
+    <!-- Ambient Radial Glow Behind Timer -->
+    <div id="ambient-glow" class="absolute inset-0 pointer-events-none transition-all duration-700 opacity-30 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.12)_0%,transparent_65%)]"></div>
+
+    <!-- Main Full-Screen Interactive Trigger Surface -->
+    <main id="screen-trigger" role="button" tabindex="0" aria-label="Toggle Stopwatch"
+          class="relative z-10 h-full w-full flex flex-col justify-between p-5 sm:p-8 md:p-10 cursor-pointer border-2 border-slate-800/80 transition-all duration-300 ease-out focus:outline-none">
+
+        <!-- Top Terminal Header Bar -->
+        <header class="w-full grid grid-cols-2 sm:grid-cols-[1fr_auto_1fr] items-center gap-2 text-xs sm:text-sm tracking-wider">
+            <div class="flex items-center space-x-2.5 text-slate-400">
+                <div class="min-w-0 text-left leading-tight">
+                    <span class="block break-all text-[10px] font-bold text-cyan-400 sm:text-xs">Cubing_Stopwatch_By:Sub_In_A_Sub</span>
+                    <span class="hidden text-slate-500 sm:inline">v5.20</span>
+                </div>
+            </div>
+
+            <label id="note-field" class="col-span-2 sm:col-span-1 justify-self-center w-full max-w-56 sm:w-56">
+                <span class="sr-only">Note or last time</span>
+                <input id="note-input" type="text" maxlength="80" autocomplete="off"
+                       placeholder="00:00.00"
+                       class="w-full rounded-md border border-slate-700/80 bg-slate-900/90 px-3 py-1.5 text-center text-xs tracking-wider text-slate-300 placeholder:text-slate-600 focus:border-cyan-500/60 focus:outline-none focus:ring-1 focus:ring-cyan-500/40">
+            </label>
+
+            <!-- Dynamic Status Badge -->
+            <div id="status-badge" class="col-start-2 row-start-1 justify-self-end sm:col-auto sm:row-auto flex items-center space-x-2 px-3 py-1 rounded-md bg-slate-900/90 border border-slate-700/80 text-slate-400 transition-colors duration-300">
+                <span id="status-dot" class="h-2 w-2 rounded-full bg-slate-500"></span>
+                <span id="status-text" class="font-medium tracking-widest">[STATUS: IDLE]</span>
+            </div>
+        </header>
+
+        <!-- Center Primary Stopwatch Readout -->
+        <section class="flex flex-col items-center justify-center my-auto text-center px-2">
+            <!-- Hours Indicator (Shown dynamically when >= 1 hour, or subtle placeholder) -->
+            <div id="hours-container" class="text-slate-500 text-sm sm:text-base md:text-lg tracking-widest mb-1 sm:mb-2 opacity-60 transition-opacity duration-300">
+                <span id="hours-display">00</span><span class="text-xs ml-1 text-slate-600">HRS</span>
+            </div>
+
+            <!-- Main MM:SS.ms Display with tabular-nums to prevent layout jitter -->
+            <div id="timer-display" class="tabular-nums font-bold tracking-tight text-slate-100 transition-all duration-300 flex items-baseline justify-center leading-none">
+                <span id="minutes-display" class="text-6xl sm:text-8xl md:text-9xl lg:text-[10rem]">00</span>
+                <span id="colon-separator" class="text-5xl sm:text-7xl md:text-8xl lg:text-9xl text-slate-600 mx-1 sm:mx-2 transition-colors duration-300">:</span>
+                <span id="seconds-display" class="text-6xl sm:text-8xl md:text-9xl lg:text-[10rem]">00</span>
+                <span class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-slate-500 ml-1 sm:ml-2">.</span>
+                <span id="ms-display" class="text-4xl sm:text-6xl md:text-7xl lg:text-8xl text-cyan-400 transition-colors duration-300">00</span>
+            </div>
+
+            <!-- Interactive Action Prompt -->
+            <div class="mt-6 sm:mt-10 flex flex-col items-center space-y-2">
+                <p id="action-hint" class="text-xs sm:text-sm tracking-widest text-slate-400 uppercase bg-slate-900/60 px-4 py-1.5 rounded-full border border-slate-800/80 transition-all duration-300">
+                    [ CLICK ANYWHERE OR PRESS SPACE TO START ]
+                </p>
+            </div>
+        </section>
+
+        <!-- Bottom Footer Bar (Left Telemetry + Right Reset Button) -->
+        <footer class="w-full flex items-end justify-between gap-4">
+            <!-- Subtle Telemetry Info -->
+            <div class="text-[11px] sm:text-xs text-slate-500 space-y-1 pointer-events-none">
+                <div class="hidden sm:flex items-center space-x-2">
+                    <span class="text-slate-600">SHORTCUTS:</span>
+                    <span class="text-slate-400">[SPACE] Toggle &bull; [R] Reset &bull; [T] Record + Reset</span>
+                </div>
+            </div>
+
+            <!-- Dedicated Reset Button in Bottom-Right Corner -->
+            <!-- Uses event.stopPropagation() so clicking it does NOT trigger the full-screen toggle -->
+            <div class="relative z-20 flex flex-col items-end gap-2">
+                <button id="reset-btn" type="button" aria-label="Reset Stopwatch"
+                        class="group flex items-center space-x-2 px-4 py-3 sm:px-5 sm:py-3 rounded-lg bg-slate-900/95 hover:bg-rose-950/50 active:scale-95 text-slate-300 hover:text-rose-400 border border-slate-700 hover:border-rose-500/60 shadow-lg shadow-black/50 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/50">
+                    <svg class="w-4 h-4 text-slate-400 group-hover:text-rose-400 group-hover:-rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span class="text-xs sm:text-sm font-semibold tracking-wider">[ RESET ]</span>
+                </button>
+                <button id="record-btn" type="button" aria-label="Record time and reset stopwatch"
+                        class="whitespace-nowrap rounded-lg border border-cyan-700/80 bg-slate-900/95 px-4 py-3 text-xs font-semibold tracking-wider text-cyan-300 shadow-lg shadow-black/50 transition-all duration-200 hover:border-cyan-500/80 hover:bg-cyan-950/40 active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500/50">
+                    [ RECORD + RESET ]
+                </button>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- Application Logic -->
+    <script>
+        (function () {
+            'use strict';
+
+            /**
+             * State Management
+             * Uses monotonic clock (performance.now) to guarantee zero time drift
+             * even if frame rates fluctuate or tabs are backgrounded.
+             */
+            const state = {
+                isRunning: false,
+                startTime: 0,
+                elapsedTime: 0,
+                animationFrameId: null
+            };
+
+            // DOM Elements Cache
+            const elements = {
+                screenTrigger: document.getElementById('screen-trigger'),
+                resetBtn: document.getElementById('reset-btn'),
+                recordBtn: document.getElementById('record-btn'),
+                noteField: document.getElementById('note-field'),
+                noteInput: document.getElementById('note-input'),
+                statusBadge: document.getElementById('status-badge'),
+                statusDot: document.getElementById('status-dot'),
+                statusText: document.getElementById('status-text'),
+                hoursContainer: document.getElementById('hours-container'),
+                hoursDisplay: document.getElementById('hours-display'),
+                minutesDisplay: document.getElementById('minutes-display'),
+                secondsDisplay: document.getElementById('seconds-display'),
+                msDisplay: document.getElementById('ms-display'),
+                colonSeparator: document.getElementById('colon-separator'),
+                actionHint: document.getElementById('action-hint'),
+                ambientGlow: document.getElementById('ambient-glow'),
+                timerDisplay: document.getElementById('timer-display')
+            };
+
+            /**
+             * Pads a number with leading zeros up to targetLength
+             * @param {number} num
+             * @param {number} targetLength
+             * @returns {string}
+             */
+            function padZero(num, targetLength = 2) {
+                return String(Math.floor(num)).padStart(targetLength, '0');
+            }
+
+            function formatRecordedTime(totalMs) {
+                const totalSeconds = Math.floor(totalMs / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = hours > 0
+                    ? Math.floor((totalSeconds % 3600) / 60)
+                    : Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                const centiseconds = Math.floor((totalMs % 1000) / 10);
+                const time = `${padZero(minutes)}:${padZero(seconds)}.${padZero(centiseconds)}`;
+
+                return hours > 0 ? `${padZero(hours)}:${time}` : time;
+            }
+
+            /**
+             * Formats milliseconds into HH, MM, SS, and CS (centiseconds)
+             * and updates the DOM efficiently.
+             * @param {number} totalMs
+             */
+            function renderTime(totalMs) {
+                const totalSeconds = Math.floor(totalMs / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                const centiseconds = Math.floor((totalMs % 1000) / 10);
+
+                elements.hoursDisplay.textContent = padZero(hours);
+                elements.minutesDisplay.textContent = padZero(minutes);
+                elements.secondsDisplay.textContent = padZero(seconds);
+                elements.msDisplay.textContent = padZero(centiseconds);
+
+                // Highlight hours container if elapsed time reaches 1 hour
+                if (hours > 0) {
+                    elements.hoursContainer.classList.remove('opacity-60', 'text-slate-500');
+                    elements.hoursContainer.classList.add('opacity-100', 'text-emerald-400');
+                } else {
+                    elements.hoursContainer.classList.add('opacity-60', 'text-slate-500');
+                    elements.hoursContainer.classList.remove('opacity-100', 'text-emerald-400');
+                }
+            }
+
+            /**
+             * High-precision animation loop driven by requestAnimationFrame
+             */
+            function updateLoop() {
+                if (!state.isRunning) return;
+
+                const now = performance.now();
+                state.elapsedTime = now - state.startTime;
+                renderTime(state.elapsedTime);
+
+                state.animationFrameId = requestAnimationFrame(updateLoop);
+            }
+
+            /**
+             * Updates visual theme tokens (border glow, status badge, accents)
+             * based on current stopwatch state: 'IDLE', 'RUNNING', or 'PAUSED'.
+             * @param {'IDLE'|'RUNNING'|'PAUSED'} mode
+             */
+            function updateVisualState(mode) {
+                // Reset dynamic classes
+                elements.screenTrigger.classList.remove(
+                    'border-slate-800/80',
+                    'border-emerald-500/60',
+                    'shadow-[inset_0_0_50px_rgba(16,185,129,0.12)]',
+                    'border-amber-500/60',
+                    'shadow-[inset_0_0_50px_rgba(245,158,11,0.10)]'
+                );
+
+                elements.statusBadge.classList.remove(
+                    'border-slate-700/80', 'text-slate-400',
+                    'border-emerald-500/50', 'text-emerald-400', 'bg-emerald-950/30',
+                    'border-amber-500/50', 'text-amber-400', 'bg-amber-950/30'
+                );
+
+                elements.statusDot.classList.remove(
+                    'bg-slate-500', 'bg-emerald-400', 'animate-ping', 'bg-amber-400'
+                );
+
+                elements.msDisplay.classList.remove('text-cyan-400', 'text-emerald-400', 'text-amber-400');
+                elements.colonSeparator.classList.remove('text-slate-600', 'text-emerald-500/70', 'text-amber-500/70');
+
+                if (mode === 'RUNNING') {
+                    // Active Emerald Hacker Theme
+                    elements.screenTrigger.classList.add(
+                        'border-emerald-500/60',
+                        'shadow-[inset_0_0_50px_rgba(16,185,129,0.12)]'
+                    );
+                    elements.statusBadge.classList.add('border-emerald-500/50', 'text-emerald-400', 'bg-emerald-950/30');
+                    elements.statusDot.classList.add('bg-emerald-400');
+                    elements.statusText.textContent = '[STATUS: RUNNING]';
+                    elements.msDisplay.classList.add('text-emerald-400');
+                    elements.colonSeparator.classList.add('text-emerald-500/70');
+                    elements.actionHint.textContent = '[ CLICK ANYWHERE OR PRESS SPACE TO PAUSE ]';
+                    elements.ambientGlow.className = 'absolute inset-0 pointer-events-none transition-all duration-700 opacity-50 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.16)_0%,transparent_65%)]';
+                } else if (mode === 'PAUSED') {
+                    // Paused Amber Warning Theme
+                    elements.screenTrigger.classList.add(
+                        'border-amber-500/60',
+                        'shadow-[inset_0_0_50px_rgba(245,158,11,0.10)]'
+                    );
+                    elements.statusBadge.classList.add('border-amber-500/50', 'text-amber-400', 'bg-amber-950/30');
+                    elements.statusDot.classList.add('bg-amber-400');
+                    elements.statusText.textContent = '[STATUS: PAUSED]';
+                    elements.msDisplay.classList.add('text-amber-400');
+                    elements.colonSeparator.classList.add('text-amber-500/70');
+                    elements.actionHint.textContent = '[ CLICK ANYWHERE OR PRESS SPACE TO RESUME ]';
+                    elements.ambientGlow.className = 'absolute inset-0 pointer-events-none transition-all duration-700 opacity-40 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.14)_0%,transparent_65%)]';
+                } else {
+                    // Idle Slate/Cyan Theme
+                    elements.screenTrigger.classList.add('border-slate-800/80');
+                    elements.statusBadge.classList.add('border-slate-700/80', 'text-slate-400');
+                    elements.statusDot.classList.add('bg-slate-500');
+                    elements.statusText.textContent = '[STATUS: IDLE]';
+                    elements.msDisplay.classList.add('text-cyan-400');
+                    elements.colonSeparator.classList.add('text-slate-600');
+                    elements.actionHint.textContent = '[ CLICK ANYWHERE OR PRESS SPACE TO START ]';
+                    elements.ambientGlow.className = 'absolute inset-0 pointer-events-none transition-all duration-700 opacity-30 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.12)_0%,transparent_65%)]';
+                }
+            }
+
+            /**
+             * Subtle tactile scale pulse on timer readout when toggled
+             */
+            function triggerTapFeedback() {
+                elements.timerDisplay.classList.add('scale-[0.985]');
+                setTimeout(() => {
+                    elements.timerDisplay.classList.remove('scale-[0.985]');
+                }, 110);
+            }
+
+            /**
+             * Toggles between Running and Paused states
+             */
+            function toggleStopwatch() {
+                try {
+                    triggerTapFeedback();
+
+                    if (state.isRunning) {
+                        // Pause timer
+                        state.isRunning = false;
+                        if (state.animationFrameId) {
+                            cancelAnimationFrame(state.animationFrameId);
+                            state.animationFrameId = null;
+                        }
+                        // Capture exact elapsed time at pause moment
+                        state.elapsedTime = performance.now() - state.startTime;
+                        renderTime(state.elapsedTime);
+                        updateVisualState('PAUSED');
+                    } else {
+                        // Start or Resume timer
+                        state.isRunning = true;
+                        state.startTime = performance.now() - state.elapsedTime;
+                        updateVisualState('RUNNING');
+                        state.animationFrameId = requestAnimationFrame(updateLoop);
+                    }
+                } catch (err) {
+                    console.error('Stopwatch toggle error:', err);
+                }
+            }
+
+            /**
+             * Resets the stopwatch completely back to 00:00.00
+             * @param {Event} event
+             */
+            function resetStopwatch(event) {
+                // Prevent click/touch from bubbling up to the full-screen toggle
+                if (event) {
+                    event.stopPropagation();
+                }
+
+                try {
+                    state.isRunning = false;
+                    if (state.animationFrameId) {
+                        cancelAnimationFrame(state.animationFrameId);
+                        state.animationFrameId = null;
+                    }
+                    state.startTime = 0;
+                    state.elapsedTime = 0;
+
+                    renderTime(0);
+                    updateVisualState('IDLE');
+                    triggerTapFeedback();
+                } catch (err) {
+                    console.error('Stopwatch reset error:', err);
+                }
+            }
+
+            function recordAndResetStopwatch(event) {
+                if (event) {
+                    event.stopPropagation();
+                }
+
+                const elapsedTime = state.isRunning
+                    ? performance.now() - state.startTime
+                    : state.elapsedTime;
+                elements.noteInput.value = formatRecordedTime(elapsedTime);
+                resetStopwatch();
+            }
+
+            // Event Listeners
+
+            // 1. Full-screen click / tap handler
+            elements.screenTrigger.addEventListener('click', function () {
+                toggleStopwatch();
+            });
+
+            elements.noteField.addEventListener('click', function (event) {
+                event.stopPropagation();
+            });
+
+            elements.noteInput.addEventListener('focus', function () {
+                elements.noteInput.value = '';
+            });
+
+            elements.noteInput.addEventListener('keydown', function (event) {
+                event.stopPropagation();
+            });
+
+            // 2. Bottom-right Reset button handler (explicitly stops propagation)
+            elements.resetBtn.addEventListener('click', function (event) {
+                resetStopwatch(event);
+            });
+
+            elements.recordBtn.addEventListener('click', function (event) {
+                recordAndResetStopwatch(event);
+            });
+
+            elements.recordBtn.addEventListener('keydown', function (event) {
+                if (event.code === 'Space') {
+                    event.preventDefault();
+                    recordAndResetStopwatch(event);
+                }
+            });
+
+            // Prevent double-triggering if user presses Space while Reset button is focused
+            elements.resetBtn.addEventListener('keydown', function (event) {
+                if (event.code === 'Space') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleStopwatch();
+                }
+            });
+
+            // 3. Global Keyboard Shortcuts (Space to toggle, R to reset, T to record and reset)
+            window.addEventListener('keydown', function (event) {
+                // Ignore if modifier keys (Ctrl, Cmd, Alt) are held
+                if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+                if (event.code === 'Space') {
+                    event.preventDefault(); // Prevent page scroll
+                    toggleStopwatch();
+                } else if (event.code === 'KeyR') {
+                    event.preventDefault();
+                    resetStopwatch(event);
+                } else if (event.code === 'KeyT') {
+                    event.preventDefault();
+                    recordAndResetStopwatch(event);
+                }
+            });
+
+            // Initialize initial IDLE state
+            renderTime(0);
+            updateVisualState('IDLE');
+        })();
+    </script>
+</body>
+</html>
