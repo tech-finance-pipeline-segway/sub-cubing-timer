@@ -145,9 +145,17 @@
                                     <input id="cursor-sparks-toggle" type="checkbox" class="accent-cyan-500">
                                     Cursor spark trail
                                 </label>
+                                <label for="cursor-spark-size-input" class="block text-xs text-slate-300">
+                                    <span class="flex items-center justify-between">
+                                        <span>Cursor spark size</span>
+                                        <output id="cursor-spark-size-value" for="cursor-spark-size-input">100%</output>
+                                    </span>
+                                    <input id="cursor-spark-size-input" type="range" min="50" max="200" step="5" value="100"
+                                           class="mt-2 w-full accent-cyan-500">
+                                </label>
                                 <label class="flex items-start gap-2 text-xs text-slate-300">
                                     <input id="competition-start-toggle" type="checkbox" class="mt-0.5 accent-cyan-500">
-                                    <span>Competition hold-start <span class="block text-[10px] text-slate-400">Hold Space or two non-R/T keys for 0.5 sec, then release to start.</span></span>
+                                    <span>Competition hold-start <span class="block text-[10px] text-slate-400">Press Space or a letter; release the last held key to start.</span></span>
                                 </label>
                                 <label for="decoration-size-input" class="block text-xs text-slate-300">
                                     <span>New decoration size</span>
@@ -286,10 +294,9 @@
                 cubeChallengeFrequency: 20,
                 cursorSparksEnabled: false,
                 lastCursorSparkAt: 0,
+                cursorSparkScale: 1,
                 competitionStartEnabled: false,
                 competitionKeysDown: new Set(),
-                competitionStartKeys: null,
-                competitionStartAt: 0,
                 cubeFactTimeouts: new Set(),
                 decorationScale: 1,
                 recentCubeFacts: [],
@@ -321,6 +328,8 @@
                 decorationsToggle: document.getElementById('decorations-toggle'),
                 cursorSparksToggle: document.getElementById('cursor-sparks-toggle'),
                 cursorSparkLayer: document.getElementById('cursor-spark-layer'),
+                cursorSparkSizeInput: document.getElementById('cursor-spark-size-input'),
+                cursorSparkSizeValue: document.getElementById('cursor-spark-size-value'),
                 competitionStartToggle: document.getElementById('competition-start-toggle'),
                 backgroundDecorations: document.getElementById('background-decorations'),
                 decorationSizeInput: document.getElementById('decoration-size-input'),
@@ -700,7 +709,7 @@
 
                 const spark = document.createElement('span');
                 const color = cursorSparkColors[Math.floor(Math.random() * cursorSparkColors.length)];
-                const size = 6 + Math.random() * 5;
+                const size = (6 + Math.random() * 5) * state.cursorSparkScale;
                 const duration = 380 + Math.random() * 180;
                 const angle = Math.random() * Math.PI * 2;
                 const distance = 10 + Math.random() * 20;
@@ -1197,7 +1206,7 @@
                     elements.msDisplay.classList.add('text-amber-400');
                     elements.colonSeparator.classList.add('text-amber-500/70');
                     elements.actionHint.textContent = state.competitionStartEnabled
-                        ? '[ HOLD SPACE OR TWO KEYS, THEN RELEASE TO RESUME ]'
+                        ? '[ PRESS SPACE OR LETTERS; RELEASE ALL TO RESUME ]'
                         : '[ CLICK ANYWHERE OR PRESS SPACE TO RESUME ]';
                     elements.ambientGlow.className = 'absolute inset-0 pointer-events-none transition-all duration-700 opacity-40 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.14)_0%,transparent_65%)]';
                 } else {
@@ -1209,7 +1218,7 @@
                     elements.msDisplay.classList.add('text-cyan-400');
                     elements.colonSeparator.classList.add('text-slate-600');
                     elements.actionHint.textContent = state.competitionStartEnabled
-                        ? '[ HOLD SPACE OR TWO KEYS, THEN RELEASE TO START ]'
+                        ? '[ PRESS SPACE OR LETTERS; RELEASE ALL TO START ]'
                         : '[ CLICK ANYWHERE OR PRESS SPACE TO START ]';
                     elements.ambientGlow.className = 'absolute inset-0 pointer-events-none transition-all duration-700 opacity-30 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.12)_0%,transparent_65%)]';
                 }
@@ -1228,23 +1237,11 @@
 
             function cancelCompetitionStart() {
                 state.competitionKeysDown.clear();
-                state.competitionStartKeys = null;
-                state.competitionStartAt = 0;
-            }
-
-            function armCompetitionStart(keys) {
-                state.competitionStartKeys = new Set(keys);
-                state.competitionStartAt = performance.now();
             }
 
             function finishCompetitionStart(event) {
-                state.competitionKeysDown.delete(event.code);
-                if (!state.competitionStartKeys || !state.competitionStartKeys.delete(event.code)) return;
-                if (state.competitionStartKeys.size > 0) return;
-
-                const heldFor = performance.now() - state.competitionStartAt;
-                cancelCompetitionStart();
-                if (state.competitionStartEnabled && !state.isRunning && heldFor >= 500) {
+                if (!state.competitionKeysDown.delete(event.code)) return;
+                if (state.competitionKeysDown.size === 0 && state.competitionStartEnabled && !state.isRunning) {
                     toggleStopwatch();
                 }
             }
@@ -1438,6 +1435,19 @@
                 }
             });
 
+            elements.cursorSparkSizeInput.addEventListener('input', function () {
+                const size = Number(elements.cursorSparkSizeInput.value);
+                const minimum = Number(elements.cursorSparkSizeInput.min);
+                const maximum = Number(elements.cursorSparkSizeInput.max);
+                if (!Number.isFinite(size) || size < minimum || size > maximum) {
+                    console.error('Invalid cursor spark size:', elements.cursorSparkSizeInput.value);
+                    return;
+                }
+
+                state.cursorSparkScale = size / 100;
+                elements.cursorSparkSizeValue.textContent = `${size}%`;
+            });
+
             window.addEventListener('pointermove', createCursorSpark, { passive: true });
 
             elements.competitionStartToggle.addEventListener('change', function () {
@@ -1558,21 +1568,12 @@
                     }
                     if (event.code === 'Space') {
                         event.preventDefault();
-                        if (!event.repeat) {
-                            state.competitionKeysDown.add(event.code);
-                            if (!state.competitionStartKeys) armCompetitionStart(['Space']);
-                        }
+                        if (!event.repeat) state.competitionKeysDown.add(event.code);
                         return;
                     }
-                    if (!event.repeat && event.key.length === 1) {
+                    if (event.key.length === 1) {
                         event.preventDefault();
-                        state.competitionKeysDown.add(event.code);
-                        const chordKeys = [...state.competitionKeysDown].filter(
-                            (code) => code !== 'Space' && code !== 'KeyR' && code !== 'KeyT'
-                        );
-                        if (!state.competitionStartKeys && chordKeys.length >= 2) {
-                            armCompetitionStart(chordKeys.slice(0, 2));
-                        }
+                        if (!event.repeat) state.competitionKeysDown.add(event.code);
                         return;
                     }
                 }
