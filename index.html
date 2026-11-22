@@ -65,12 +65,12 @@
                     <button id="site-info-trigger" type="button" aria-describedby="site-info-panel"
                             class="block text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60">
                         <span class="block break-all text-[10px] font-bold text-cyan-400 sm:text-xs">Cubing_Stopwatch_By:Sub_In_A_Sub</span>
-                        <span class="hidden text-slate-500 sm:inline">v7.50</span>
+                        <span class="hidden text-slate-500 sm:inline">v8.20</span>
                     </button>
                     <div id="site-info-panel" role="region" aria-label="Website information and background settings"
                          class="invisible absolute left-0 top-full z-50 mt-0 max-h-[80vh] w-80 max-w-[calc(100vw-2.5rem)] overflow-y-auto rounded-lg border border-slate-700 bg-slate-950/95 p-4 text-left normal-case tracking-normal text-slate-300 opacity-0 shadow-xl">
                         <p class="text-[10px] font-bold tracking-widest text-cyan-400">BIO</p>
-                        <p class="mt-1 text-xs leading-relaxed">By Sub_In_A_Sub. <a href="mailto:sebinnaper@gmail.com" class="text-cyan-300 underline decoration-cyan-500/40 underline-offset-2">Email</a></p>
+                        <p class="mt-1 text-xs leading-relaxed">By Sub_In_A_Sub. <a href="mailto:sebinnaper@gmail.com" title="sebinnaper@gmail.com" aria-label="Email sebinnaper@gmail.com" class="text-cyan-300 underline decoration-cyan-500/40 underline-offset-2">Email</a></p>
                         <p class="mt-3 text-[10px] font-bold tracking-widest text-cyan-400">DESCRIPTION</p>
                         <p class="mt-1 text-xs leading-relaxed">A sleek, customizable full-screen timer made for speedcubing.</p>
                         <p class="mt-3 text-[10px] font-bold tracking-widest text-cyan-400">INFO</p>
@@ -170,7 +170,7 @@
                                 </label>
                                 <label class="flex items-start gap-2 text-xs text-slate-300">
                                     <input id="cube-challenge-toggle" type="checkbox" class="mt-0.5 accent-cyan-500">
-                                    <span>Random cube pop-ups (stay on until disabled)</span>
+                                    <span>Random cube pop-ups <span class="block text-[10px] text-slate-400">Click a cube to solve it and reveal a fun fact; stays on until disabled.</span></span>
                                 </label>
                                 <label for="cube-challenge-frequency-input" class="block text-xs text-slate-300">
                                     <span class="flex items-center justify-between gap-2">
@@ -191,7 +191,11 @@
                                             <span class="h-2 w-2 rounded-[2px] bg-cyan-600"></span><span class="h-2 w-2 rounded-[2px] bg-cyan-950"></span><span class="h-2 w-2 rounded-[2px] bg-cyan-700"></span>
                                         </span>
                                     </button>
-                                    <button id="clear-decorations-btn" type="button" aria-label="Clear cube decorations"
+                                    <button id="add-fibonacci-decoration-btn" type="button"
+                                            aria-label="Add a Fibonacci spiral decoration"
+                                            class="rounded-lg border border-cyan-800 bg-slate-950 p-2 transition hover:border-cyan-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/70">
+                                    </button>
+                                    <button id="clear-decorations-btn" type="button" aria-label="Clear decorations"
                                             class="rounded border border-slate-700 px-2 py-1.5 text-[10px] text-slate-400 hover:border-rose-500/60 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-500/60">Clear</button>
                                 </div>
                             </div>
@@ -339,6 +343,7 @@
                 cubeChallengeFrequencyValue: document.getElementById('cube-challenge-frequency-value'),
                 cubeChallengeLayer: document.getElementById('cube-challenge-layer'),
                 addCubeDecorationBtn: document.getElementById('add-cube-decoration-btn'),
+                addFibonacciDecorationBtn: document.getElementById('add-fibonacci-decoration-btn'),
                 clearDecorationsBtn: document.getElementById('clear-decorations-btn'),
                 userDecorationLayer: document.getElementById('user-decoration-layer'),
                 resetBtn: document.getElementById('reset-btn'),
@@ -372,6 +377,9 @@
                 ['#082f49', '#0c4a6e', '#0369a1', '#155e75', '#0891b2', '#38bdf8']
             ];
             const cursorSparkColors = ['#22d3ee', '#67e8f9', '#a78bfa', '#f0abfc'];
+            const CUBE_FACT_MIN_VISIBLE_MS = 5000;
+            const CUBE_FACT_FADE_MS = 1500;
+            const CUBE_FACT_TAP_THRESHOLD_MS = 180;
             const cubeFacts = [
                 'CUBING - A standard 3x3 has 43,252,003,274,489,856,000 legal positions.',
                 'CUBING - Every legal 3x3 position is solvable in at most 20 face turns.',
@@ -393,7 +401,7 @@
                 'QUANT FINANCE - Risk-neutral pricing discounts expected payoffs under a risk-neutral measure.',
                 'QUANT FINANCE - Value at Risk is a loss quantile, not a worst-case loss limit.',
                 'QUANT FINANCE - Diversification can reduce asset-specific risk, not all market risk.',
-                'QUANT CAREERS - Pay may include salary and performance bonuses; it varies by firm, role, location, and experience.',
+                'QUANT CAREERS - Entry-level total compensation at elite U.S. quant firms can be roughly $200K-$300K; top portfolio managers may earn $1M+ in strong years, though bonuses vary widely.',
                 'CAREERS - Math and coding can lead to quant research, quant development, algorithmic trading, data science, and machine learning.',
                 'SPEEDCUBING + RESUME - Competition results, personal-best progress, coaching, or a cubing app make concrete resume examples.',
                 'SPEEDCUBING + RESUME - It can show focused practice and composure; pair it with a result or project to show transferable skills.',
@@ -401,7 +409,25 @@
                 "PHYSICS - Planck's constant is exactly 6.62607015 x 10^-34 joule-seconds in SI.",
                 "PHYSICS - A photon's energy is E = h times its frequency.",
                 'PHYSICS - Special relativity predicts time dilation between observers in relative motion.',
-                'PHYSICS - The second law says entropy in an isolated system does not decrease.'
+                'PHYSICS - The second law says entropy in an isolated system does not decrease.',
+                'MATH - A prime number has exactly two positive divisors: 1 and itself.',
+                'MATH - If n+1 objects go into n boxes, at least one box contains two (the pigeonhole principle).',
+                'MATH - A deck of 52 distinct cards has 52! possible orderings.',
+                'PHYSICS - A quantum superposition is a coherent combination of possible states; measurements have probabilistic outcomes.',
+                "PHYSICS - Schrödinger's cat is a thought experiment about quantum measurement at everyday scales, not a real experiment on a cat.",
+                'PHYSICS - The uncertainty principle sets a lower bound on how precisely position and momentum can be known together.',
+                'PHYSICS - General relativity describes gravity through the curvature of spacetime.',
+                'PHYSICS - A light-year is a distance: about 9.46 trillion kilometers.',
+                "MATHEMATICIANS - Emmy Noether's theorem connects continuous symmetries with conservation laws.",
+                'PHYSICISTS - Richard Feynman shared the 1965 Nobel Prize in Physics for work on quantum electrodynamics.',
+                'MATHEMATICIANS - Katherine Johnson calculated trajectories for early NASA crewed missions.',
+                'QUANT FINANCE - Statistical arbitrage trades on statistical relationships; it is not risk-free because those relationships can break.',
+                'QUANT FINANCE - Pairs trading focuses on the relative price spread between related assets, not just their individual direction.',
+                'HEDGE FUNDS - Hedge funds use many strategies, including long-short, global macro, event-driven, and quantitative approaches.',
+                'PRIVATE EQUITY - Leveraged buyouts use debt for part of an acquisition; leverage increases both potential returns and risk.',
+                'RENAISSANCE - Renaissance Technologies Medallion is a quantitative fund generally reserved for firm insiders and employees.',
+                'RENAISSANCE - Mathematician Jim Simons co-founded Renaissance Technologies.',
+                'QUANT FINANCE - Backtests can overfit historical data, and fees, slippage, and market impact can erase apparent profits.'
             ];
 
             function setBackgroundTheme(themeName) {
@@ -682,10 +708,21 @@
                 return { cube, stickers };
             }
 
-            function chooseRandomItem(items, excludedItems = []) {
-                const availableItems = items.filter((item) => !excludedItems.includes(item));
-                const choices = availableItems.length > 0 ? availableItems : items;
-                return choices[Math.floor(Math.random() * choices.length)];
+            function chooseRandomCubeFact() {
+                const recentFacts = new Set(state.recentCubeFacts.slice(-5));
+                const availableFacts = Array.from(new Set(cubeFacts))
+                    .filter((fact) => !recentFacts.has(fact));
+                if (availableFacts.length === 0) {
+                    console.error('No cube fact is available outside the recent five.');
+                    return null;
+                }
+
+                const fact = availableFacts[Math.floor(Math.random() * availableFacts.length)];
+                state.recentCubeFacts.push(fact);
+                if (state.recentCubeFacts.length > 5) {
+                    state.recentCubeFacts.shift();
+                }
+                return fact;
             }
 
             function applyDecorationSize() {
@@ -852,19 +889,135 @@
             }
 
             function addDecoration() {
+                addUserDecoration('cube');
+            }
+
+            function createFibonacciSpiralSvg(color = '#22d3ee') {
+                const svgNamespace = 'http://www.w3.org/2000/svg';
+                const svg = document.createElementNS(svgNamespace, 'svg');
+                const squareLayer = document.createElementNS(svgNamespace, 'g');
+                const labelLayer = document.createElementNS(svgNamespace, 'g');
+                const spiral = document.createElementNS(svgNamespace, 'path');
+                const scale = 6;
+                const originX = 25;
+                const originY = 1;
+                const squares = [
+                    { value: 1, x: 0, y: 0 },
+                    { value: 1, x: 1, y: 0 },
+                    { value: 2, x: 0, y: 1 },
+                    { value: 3, x: -3, y: 0 },
+                    { value: 5, x: -3, y: -5 },
+                    { value: 8, x: 2, y: -5 },
+                    { value: 13, x: -3, y: 3 }
+                ];
+                const arcs = [
+                    { radius: 1, start: [0, 1], end: [1, 0], center: [0, 0] },
+                    { radius: 1, start: [1, 0], end: [2, 1], center: [2, 0] },
+                    { radius: 2, start: [2, 1], end: [0, 3], center: [0, 1] },
+                    { radius: 3, start: [0, 3], end: [-3, 0], center: [0, 0] },
+                    { radius: 5, start: [-3, 0], end: [2, -5], center: [2, 0] },
+                    { radius: 8, start: [2, -5], end: [10, 3], center: [2, 3] },
+                    { radius: 13, start: [10, 3], end: [-3, 16], center: [-3, 3] }
+                ];
+
+                function toSvgPoint(point) {
+                    return {
+                        x: originX + (point[0] + 3) * scale,
+                        y: originY + (16 - point[1]) * scale
+                    };
+                }
+
+                svg.setAttribute('viewBox', '0 0 128 128');
+                svg.setAttribute('width', '128');
+                svg.setAttribute('height', '128');
+                svg.setAttribute('aria-hidden', 'true');
+                squares.forEach(function (square) {
+                    const size = square.value * scale;
+                    const x = originX + (square.x + 3) * scale;
+                    const y = originY + (16 - square.y - square.value) * scale;
+                    const rect = document.createElementNS(svgNamespace, 'rect');
+                    const label = document.createElementNS(svgNamespace, 'text');
+
+                    rect.setAttribute('x', String(x));
+                    rect.setAttribute('y', String(y));
+                    rect.setAttribute('width', String(size));
+                    rect.setAttribute('height', String(size));
+                    rect.setAttribute('fill', 'rgba(2, 6, 23, 0.12)');
+                    rect.setAttribute('stroke', color);
+                    rect.setAttribute('stroke-opacity', '0.55');
+                    rect.setAttribute('stroke-width', '1');
+                    squareLayer.appendChild(rect);
+
+                    label.setAttribute('x', String(x + size / 2));
+                    label.setAttribute('y', String(y + size / 2));
+                    label.setAttribute('fill', color);
+                    label.setAttribute('font-family', 'ui-monospace, SFMono-Regular, Menlo, monospace');
+                    label.setAttribute('font-size', String(Math.min(9, Math.max(5, square.value * 0.7))));
+                    label.setAttribute('font-weight', '700');
+                    label.setAttribute('text-anchor', 'middle');
+                    label.setAttribute('dominant-baseline', 'central');
+                    label.textContent = String(square.value);
+                    labelLayer.appendChild(label);
+                });
+
+                const firstPoint = toSvgPoint(arcs[0].start);
+                let pathData = `M${firstPoint.x} ${firstPoint.y}`;
+                arcs.forEach(function (arc) {
+                    const start = toSvgPoint(arc.start);
+                    const end = toSvgPoint(arc.end);
+                    const center = toSvgPoint(arc.center);
+                    const startAngle = Math.atan2(start.y - center.y, start.x - center.x);
+                    const endAngle = Math.atan2(end.y - center.y, end.x - center.x);
+                    const clockwiseSweep = (endAngle - startAngle + 2 * Math.PI) % (2 * Math.PI);
+                    const sweep = clockwiseSweep <= Math.PI ? 1 : 0;
+                    const radius = arc.radius * scale;
+                    pathData += ` A${radius} ${radius} 0 0 ${sweep} ${end.x} ${end.y}`;
+                });
+
+                spiral.setAttribute('d', pathData);
+                spiral.setAttribute('fill', 'none');
+                spiral.setAttribute('stroke', color);
+                spiral.setAttribute('stroke-width', '2.3');
+                spiral.setAttribute('stroke-linecap', 'round');
+                spiral.setAttribute('stroke-linejoin', 'round');
+                spiral.style.filter = `drop-shadow(0 0 4px ${color})`;
+                svg.appendChild(squareLayer);
+                svg.appendChild(spiral);
+                svg.appendChild(labelLayer);
+                return svg;
+            }
+
+            function addUserDecoration(type) {
+                if (type !== 'cube' && type !== 'fibonacci') {
+                    console.error('Unknown decoration type:', type);
+                    return;
+                }
+
                 const decoration = document.createElement('div');
-                decoration.dataset.userDecoration = 'cube';
+                decoration.dataset.userDecoration = type;
                 decoration.dataset.angle = String(Math.round(Math.random() * 40 - 20));
-                decoration.className = 'pointer-events-auto fixed z-10 flex select-none touch-none items-center rounded-lg border border-cyan-500/60 bg-slate-950/90 p-2 text-xs text-cyan-200 shadow-lg shadow-black/30 cursor-grab';
                 decoration.tabIndex = 0;
                 decoration.setAttribute('role', 'group');
-                decoration.setAttribute(
-                    'aria-label',
-                    "Rubik's cube decoration. Drag to move, drop on the website title to remove, use arrow keys when focused, or press Delete to remove."
-                );
+                if (type === 'cube') {
+                    decoration.className = 'pointer-events-auto fixed z-10 flex select-none touch-none items-center rounded-lg border border-cyan-500/60 bg-slate-950/90 p-2 text-xs text-cyan-200 shadow-lg shadow-black/30 cursor-grab';
+                    decoration.setAttribute(
+                        'aria-label',
+                        "Rubik's cube decoration. Drag to move, drop on the website title to remove, use arrow keys when focused, or press Delete to remove."
+                    );
+                    const { cube } = createCubeGrid();
+                    decoration.appendChild(cube);
+                } else {
+                    decoration.className = 'pointer-events-auto fixed z-10 flex select-none touch-none items-center justify-center cursor-grab';
+                    decoration.style.width = '128px';
+                    decoration.style.height = '128px';
+                    decoration.setAttribute(
+                        'aria-label',
+                        'Fibonacci spiral decoration. Drag to move, drop on the website title to remove, use arrow keys when focused, or press Delete to remove.'
+                    );
+                    const color = cursorSparkColors[Math.floor(Math.random() * cursorSparkColors.length)];
+                    decoration.appendChild(createFibonacciSpiralSvg(color));
+                }
                 applyDecorationTransform(decoration);
-                const { cube } = createCubeGrid();
-                decoration.appendChild(cube);
 
                 makeDecorationDraggable(decoration, function () {
                     toggleStopwatch();
@@ -874,18 +1027,120 @@
                 setRandomDecorationPosition(decoration, getDecorationAvoidElements(decoration));
             }
 
-            function scheduleCubeChallengeRemoval(element, delay) {
+            function scheduleCubeFactFade(factCard, cubeButton, delay) {
                 const timeoutId = window.setTimeout(function () {
                     state.cubeFactTimeouts.delete(timeoutId);
-                    element.remove();
-                    spawnPendingCubeChallenge();
+                    if (!factCard.isConnected || !cubeButton.isConnected) return;
+                    factCard.dataset.fading = 'true';
+                    const factAnimation = factCard.animate(
+                        [{ opacity: 1 }, { opacity: 0 }],
+                        { duration: CUBE_FACT_FADE_MS, easing: 'linear', fill: 'forwards' }
+                    );
+                    cubeButton.animate(
+                        [{ opacity: 1 }, { opacity: 0 }],
+                        { duration: CUBE_FACT_FADE_MS, easing: 'linear', fill: 'forwards' }
+                    );
+                    factAnimation.onfinish = function () {
+                        dismissCubeFact(factCard, cubeButton);
+                    };
                 }, delay);
                 state.cubeFactTimeouts.add(timeoutId);
             }
 
-            function pauseCubeFactDismissal() {
+            function pauseCubeFactDismissal(factCard, cubeButton) {
                 state.cubeFactTimeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
                 state.cubeFactTimeouts.clear();
+                const activeFactCard = factCard || elements.cubeChallengeLayer.querySelector('[data-challenge-fact]');
+                const activeCubeButton = cubeButton || elements.cubeChallengeLayer.querySelector('[data-challenge-cube]');
+                if (!activeFactCard) return;
+                if (!activeFactCard.dataset.pausedAt) {
+                    activeFactCard.dataset.pausedAt = String(performance.now());
+                }
+                [activeFactCard, activeCubeButton].filter(Boolean).forEach((element) => {
+                    element.getAnimations().forEach((animation) => animation.pause());
+                });
+            }
+
+            function dismissCubeFact(factCard, cubeButton) {
+                pauseCubeFactDismissal(factCard, cubeButton);
+                [factCard, cubeButton].filter(Boolean).forEach((element) => {
+                    element.getAnimations().forEach((animation) => animation.cancel());
+                });
+                if (factCard && factCard.isConnected) factCard.remove();
+                if (cubeButton && cubeButton.isConnected) cubeButton.remove();
+                spawnPendingCubeChallenge();
+            }
+
+            function resumeCubeFactDismissal(factCard, cubeButton) {
+                if (!factCard.isConnected || !cubeButton.isConnected || state.cubeFactTimeouts.size > 0) return;
+
+                const now = performance.now();
+                const pausedAt = Number(factCard.dataset.pausedAt);
+                if (Number.isFinite(pausedAt)) {
+                    const shownAt = Number(factCard.dataset.shownAt);
+                    if (Number.isFinite(shownAt)) {
+                        factCard.dataset.shownAt = String(shownAt + now - pausedAt);
+                    }
+                    delete factCard.dataset.pausedAt;
+                }
+                if (factCard.dataset.fading === 'true') {
+                    [factCard, cubeButton].forEach((element) => {
+                        element.getAnimations().forEach((animation) => animation.play());
+                    });
+                    return;
+                }
+
+                const shownAt = Number(factCard.dataset.shownAt);
+                const elapsed = Number.isFinite(shownAt)
+                    ? now - shownAt
+                    : CUBE_FACT_MIN_VISIBLE_MS;
+                scheduleCubeFactFade(factCard, cubeButton, Math.max(0, CUBE_FACT_MIN_VISIBLE_MS - elapsed));
+            }
+
+            function attachCubeFactPressHandlers(element, factCard, cubeButton, dismissOnTap) {
+                let activePointerId = null;
+                let pointerDownAt = 0;
+
+                function finishPress(event, allowTapDismiss) {
+                    if (event.pointerId !== activePointerId) return;
+
+                    const heldFor = performance.now() - pointerDownAt;
+                    activePointerId = null;
+                    event.stopPropagation();
+                    if (element.hasPointerCapture(event.pointerId)) {
+                        element.releasePointerCapture(event.pointerId);
+                    }
+
+                    if (allowTapDismiss && dismissOnTap && heldFor < CUBE_FACT_TAP_THRESHOLD_MS) {
+                        dismissCubeFact(factCard, cubeButton);
+                    } else {
+                        resumeCubeFactDismissal(factCard, cubeButton);
+                    }
+                }
+
+                element.addEventListener('pointerdown', function (event) {
+                    if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)
+                        || activePointerId !== null) return;
+
+                    if (dismissOnTap) event.preventDefault();
+                    event.stopPropagation();
+                    activePointerId = event.pointerId;
+                    pointerDownAt = performance.now();
+                    pauseCubeFactDismissal(factCard, cubeButton);
+                    element.setPointerCapture(event.pointerId);
+                });
+                element.addEventListener('pointerup', function (event) {
+                    finishPress(event, true);
+                });
+                element.addEventListener('pointercancel', function (event) {
+                    finishPress(event, false);
+                });
+                element.addEventListener('lostpointercapture', function (event) {
+                    finishPress(event, false);
+                });
+                element.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                });
             }
 
             function positionCubeFactCard(factCard, cubeButton) {
@@ -978,23 +1233,42 @@
             }
 
             function showCubeFact(cubeButton) {
-                const fact = chooseRandomItem(cubeFacts, state.recentCubeFacts);
-                state.recentCubeFacts.push(fact);
-                if (state.recentCubeFacts.length > 5) {
-                    state.recentCubeFacts.shift();
-                }
+                const fact = chooseRandomCubeFact();
+                if (!fact) return;
 
                 const factCard = document.createElement('div');
                 factCard.dataset.challengeFact = 'true';
-                factCard.className = 'pointer-events-auto fixed z-10 w-56 max-w-[calc(100vw-16px)] rounded-lg border border-cyan-500/60 bg-slate-950/95 p-3 text-xs leading-relaxed text-cyan-100 shadow-xl shadow-cyan-950/40';
+                factCard.className = 'pointer-events-auto fixed z-10 w-56 max-w-[calc(100vw-16px)] cursor-pointer select-none touch-none rounded-lg border border-cyan-500/60 bg-slate-950/95 p-3 text-xs leading-relaxed text-cyan-100 shadow-xl shadow-cyan-950/40';
                 factCard.setAttribute('role', 'status');
                 factCard.setAttribute('aria-live', 'polite');
+                factCard.setAttribute('aria-label', 'Fun fact. Click to dismiss or press and hold to keep it open.');
+                factCard.tabIndex = 0;
                 factCard.textContent = `FUN FACT: ${fact}`;
                 factCard.style.transform = 'none';
+                factCard.style.boxSizing = 'border-box';
+                factCard.style.width = '14rem';
+                factCard.style.maxWidth = 'calc(100vw - 16px)';
+                factCard.style.minHeight = '3rem';
+                factCard.style.left = '8px';
+                factCard.style.top = '8px';
+                factCard.style.visibility = 'hidden';
+                attachCubeFactPressHandlers(factCard, factCard, cubeButton, true);
+                factCard.addEventListener('keydown', function (event) {
+                    event.stopPropagation();
+                    if (event.code !== 'Enter' && event.code !== 'Space') return;
+                    event.preventDefault();
+                    dismissCubeFact(factCard, cubeButton);
+                });
                 elements.cubeChallengeLayer.appendChild(factCard);
+                attachCubeFactPressHandlers(cubeButton, factCard, cubeButton, false);
                 positionCubeFactCard(factCard, cubeButton);
-                scheduleCubeChallengeRemoval(factCard, 6500);
-                scheduleCubeChallengeRemoval(cubeButton, 6500);
+                window.requestAnimationFrame(function () {
+                    if (!factCard.isConnected || !cubeButton.isConnected) return;
+                    positionCubeFactCard(factCard, cubeButton);
+                    factCard.dataset.shownAt = String(performance.now());
+                    factCard.style.visibility = 'visible';
+                    scheduleCubeFactFade(factCard, cubeButton, CUBE_FACT_MIN_VISIBLE_MS);
+                });
                 scheduleNextCubeChallenge();
             }
 
@@ -1017,7 +1291,10 @@
                 cubeButton.appendChild(cube);
                 makeDecorationDraggable(cubeButton, function (event) {
                     event.stopPropagation();
-                    if (cubeButton.dataset.solved === 'true') return;
+                    if (cubeButton.dataset.solved === 'true') {
+                        dismissCubeFact(elements.cubeChallengeLayer.querySelector('[data-challenge-fact]'), cubeButton);
+                        return;
+                    }
                     cubeButton.dataset.solved = 'true';
                     cubeButton.setAttribute('aria-label', "Solved cube; a Rubik's cube fun fact is shown nearby");
                     stickers.forEach((sticker) => {
@@ -1032,14 +1309,12 @@
                     positionCubeFactCard(factCard, cubeButton);
                 }, function () {
                     const factCard = elements.cubeChallengeLayer.querySelector('[data-challenge-fact]');
-                    if (factCard) factCard.remove();
-                    spawnPendingCubeChallenge();
+                    dismissCubeFact(factCard, cubeButton);
                 }, function () {
                     if (!cubeButton.isConnected) return;
                     const factCard = elements.cubeChallengeLayer.querySelector('[data-challenge-fact]');
                     if (!factCard) return;
-                    scheduleCubeChallengeRemoval(factCard, 6500);
-                    scheduleCubeChallengeRemoval(cubeButton, 6500);
+                    resumeCubeFactDismissal(factCard, cubeButton);
                 });
                 cubeButton.addEventListener('keydown', function (event) {
                     if (event.code === 'Space' || event.code === 'Enter') event.stopPropagation();
@@ -1074,6 +1349,10 @@
                 state.cubeChallengePending = false;
                 state.cubeFactTimeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
                 state.cubeFactTimeouts.clear();
+                elements.cubeChallengeLayer.querySelectorAll('[data-challenge-fact], [data-challenge-cube]')
+                    .forEach((element) => {
+                        element.getAnimations().forEach((animation) => animation.cancel());
+                    });
                 elements.cubeChallengeLayer.replaceChildren();
 
                 if (!enabled) return;
@@ -1480,6 +1759,14 @@
 
             elements.addCubeDecorationBtn.addEventListener('click', function () {
                 addDecoration();
+            });
+
+            const fibonacciDecorationIcon = createFibonacciSpiralSvg();
+            fibonacciDecorationIcon.classList.add('h-9', 'w-9');
+            elements.addFibonacciDecorationBtn.appendChild(fibonacciDecorationIcon);
+
+            elements.addFibonacciDecorationBtn.addEventListener('click', function () {
+                addUserDecoration('fibonacci');
             });
 
             elements.clearDecorationsBtn.addEventListener('click', function () {
