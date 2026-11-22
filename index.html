@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Cubing_Stopwatch_By:Sub_In_A_Sub</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -35,33 +35,152 @@
         }
     </script>
 </head>
-<body class="bg-cyber-bg text-slate-200 font-mono h-screen w-screen overflow-hidden select-none antialiased relative">
+<body class="bg-cyber-bg text-slate-200 font-mono min-h-screen w-full overflow-x-hidden overflow-y-auto select-none antialiased relative">
 
-    <!-- Subtle Developer Grid Background (SVG pattern for pure Tailwind/HTML compliance) -->
-    <div class="absolute inset-0 pointer-events-none opacity-20">
-        <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <pattern id="dev-grid" width="36" height="36" patternUnits="userSpaceOnUse">
-                    <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#334155" stroke-width="0.75"/>
-                </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dev-grid)" />
-        </svg>
+    <div id="background-decorations" class="absolute inset-0 pointer-events-none">
+        <!-- Subtle Developer Grid Background -->
+        <div class="absolute inset-0 opacity-20">
+            <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="dev-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+                        <path d="M 36 0 L 0 0 0 36" fill="none" stroke="#334155" stroke-width="0.75"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#dev-grid)" />
+            </svg>
+        </div>
+
+        <!-- Ambient Radial Glow Behind Timer -->
+        <div id="ambient-glow" class="absolute inset-0 transition-all duration-700 opacity-30 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.12)_0%,transparent_65%)]"></div>
     </div>
-
-    <!-- Ambient Radial Glow Behind Timer -->
-    <div id="ambient-glow" class="absolute inset-0 pointer-events-none transition-all duration-700 opacity-30 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.12)_0%,transparent_65%)]"></div>
 
     <!-- Main Full-Screen Interactive Trigger Surface -->
     <main id="screen-trigger" role="button" tabindex="0" aria-label="Toggle Stopwatch"
-          class="relative z-10 h-full w-full flex flex-col justify-between p-5 sm:p-8 md:p-10 cursor-pointer border-2 border-slate-800/80 transition-all duration-300 ease-out focus:outline-none">
+          class="relative min-h-screen w-full flex flex-col justify-between p-5 sm:p-8 md:p-10 cursor-pointer border-2 border-slate-800/80 transition-all duration-300 ease-out focus:outline-none">
 
         <!-- Top Terminal Header Bar -->
-        <header class="w-full grid grid-cols-2 sm:grid-cols-[1fr_auto_1fr] items-center gap-2 text-xs sm:text-sm tracking-wider">
+        <header class="relative z-30 w-full grid grid-cols-2 sm:grid-cols-[1fr_auto_1fr] items-center gap-2 text-xs sm:text-sm tracking-wider">
             <div class="flex items-center space-x-2.5 text-slate-400">
-                <div class="min-w-0 text-left leading-tight">
-                    <span class="block break-all text-[10px] font-bold text-cyan-400 sm:text-xs">Cubing_Stopwatch_By:Sub_In_A_Sub</span>
-                    <span class="hidden text-slate-500 sm:inline">v5.20</span>
+                <div id="site-info-wrapper" class="group relative min-w-0 text-left leading-tight">
+                    <button id="site-info-trigger" type="button" aria-describedby="site-info-panel"
+                            class="block text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60">
+                        <span class="block break-all text-[10px] font-bold text-cyan-400 sm:text-xs">Cubing_Stopwatch_By:Sub_In_A_Sub</span>
+                        <span class="hidden text-slate-500 sm:inline">v7.40</span>
+                    </button>
+                    <div id="site-info-panel" role="region" aria-label="Website information and background settings"
+                         class="invisible absolute left-0 top-full z-50 mt-0 max-h-[80vh] w-80 max-w-[calc(100vw-2.5rem)] overflow-y-auto rounded-lg border border-slate-700 bg-slate-950/95 p-4 text-left normal-case tracking-normal text-slate-300 opacity-0 shadow-xl">
+                        <p class="text-[10px] font-bold tracking-widest text-cyan-400">BIO</p>
+                        <p class="mt-1 text-xs leading-relaxed">By Sub_In_A_Sub. <a href="mailto:sebinnaper@gmail.com" class="text-cyan-300 underline decoration-cyan-500/40 underline-offset-2">Email</a></p>
+                        <p class="mt-3 text-[10px] font-bold tracking-widest text-cyan-400">DESCRIPTION</p>
+                        <p class="mt-1 text-xs leading-relaxed">A sleek, customizable full-screen timer made for speedcubing.</p>
+                        <p class="mt-3 text-[10px] font-bold tracking-widest text-cyan-400">INFO</p>
+                        <p class="mt-1 text-xs leading-relaxed">Space or any letter except R/T toggles. R resets; T records and resets.</p>
+                        <div class="mt-3 border-t border-slate-800 pt-3">
+                            <button id="appearance-toggle" type="button" aria-expanded="false" aria-controls="appearance-controls"
+                                    class="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-left text-xs font-semibold text-cyan-300 transition hover:border-cyan-500/60 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60">
+                                Customize
+                            </button>
+                            <div id="appearance-controls" class="mt-3 space-y-3" hidden>
+                                <fieldset>
+                                    <legend class="text-[10px] font-bold tracking-widest text-slate-400">BACKGROUND COLOR</legend>
+                                    <div class="mt-2 grid grid-cols-2 gap-2">
+                                        <button type="button" data-background-theme="midnight" aria-pressed="true"
+                                                class="rounded border border-slate-700 px-2 py-1.5 text-[10px] text-slate-300 hover:border-cyan-500/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60">Midnight</button>
+                                        <button type="button" data-background-theme="ocean" aria-pressed="false"
+                                                class="rounded border border-slate-700 px-2 py-1.5 text-[10px] text-slate-300 hover:border-cyan-500/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60">Ocean</button>
+                                        <button type="button" data-background-theme="forest" aria-pressed="false"
+                                                class="rounded border border-slate-700 px-2 py-1.5 text-[10px] text-slate-300 hover:border-cyan-500/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60">Forest</button>
+                                        <button type="button" data-background-theme="violet" aria-pressed="false"
+                                                class="rounded border border-slate-700 px-2 py-1.5 text-[10px] text-slate-300 hover:border-cyan-500/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60">Violet</button>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="flex items-center justify-between gap-3 text-xs text-slate-300">
+                                            <span>Custom color</span>
+                                            <button id="background-color-picker-toggle" type="button"
+                                                    aria-expanded="false" aria-controls="background-color-controls"
+                                                    aria-label="Open custom background color controls"
+                                                    class="block h-8 w-12 overflow-hidden rounded border border-slate-600/80 bg-transparent p-1 transition-colors hover:border-cyan-500/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500/60">
+                                                <span id="background-color-preview" class="block h-full w-full rounded-sm opacity-80"></span>
+                                            </button>
+                                        </div>
+                                        <div id="background-color-controls" hidden
+                                             class="mt-2 space-y-2 rounded-md border p-3 backdrop-blur-md">
+                                            <label for="background-color-hue" class="block text-[10px]">
+                                                <span class="flex justify-between"><span>Hue</span><output id="background-color-hue-value">0°</output></span>
+                                                <input id="background-color-hue" type="range" min="0" max="359" value="0"
+                                                       aria-label="Custom background hue"
+                                                       class="mt-1 w-full accent-cyan-500">
+                                            </label>
+                                            <label for="background-color-saturation" class="block text-[10px]">
+                                                <span class="flex justify-between"><span>Saturation</span><output id="background-color-saturation-value">0%</output></span>
+                                                <input id="background-color-saturation" type="range" min="0" max="100" value="0"
+                                                       aria-label="Custom background saturation"
+                                                       class="mt-1 w-full accent-cyan-500">
+                                            </label>
+                                            <label for="background-color-lightness" class="block text-[10px]">
+                                                <span class="flex justify-between"><span>Lightness</span><output id="background-color-lightness-value">0%</output></span>
+                                                <input id="background-color-lightness" type="range" min="0" max="100" value="0"
+                                                       aria-label="Custom background lightness"
+                                                       class="mt-1 w-full accent-cyan-500">
+                                            </label>
+                                            <label for="background-color-hex" class="block text-[10px]">
+                                                <span>Hex color</span>
+                                                <input id="background-color-hex" type="text" value="#06080a" maxlength="7"
+                                                       spellcheck="false" autocapitalize="off" autocomplete="off"
+                                                       aria-label="Custom background hex color"
+                                                       aria-describedby="background-color-error"
+                                                       class="mt-1 w-full rounded border px-2 py-1 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/60">
+                                            </label>
+                                            <p id="background-color-error" role="status" hidden
+                                               class="text-[10px] text-rose-500">Enter a six-digit hex color, such as #112233.</p>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                                <label class="flex items-center gap-2 text-xs text-slate-300">
+                                    <input id="decorations-toggle" type="checkbox" checked
+                                           class="accent-cyan-500">
+                                    Show grid and glow decorations
+                                </label>
+                                <label for="decoration-size-input" class="block text-xs text-slate-300">
+                                    <span>New decoration size</span>
+                                    <span class="mt-2 flex items-center gap-2">
+                                        <input id="decoration-size-input" type="range" min="30" max="300" step="1" value="100"
+                                               class="min-w-0 flex-1 accent-cyan-500">
+                                        <input id="decoration-size-number" type="number" min="30" max="300" step="1" value="100" required
+                                               aria-label="New decoration size percent"
+                                               class="w-16 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-right text-xs text-slate-200 focus:border-cyan-500/60 focus:outline-none">
+                                        <span>%</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-start gap-2 text-xs text-slate-300">
+                                    <input id="cube-challenge-toggle" type="checkbox" class="mt-0.5 accent-cyan-500">
+                                    <span>Random cube pop-ups (stay on until disabled)</span>
+                                </label>
+                                <label for="cube-challenge-frequency-input" class="block text-xs text-slate-300">
+                                    <span class="flex items-center justify-between gap-2">
+                                        <span>Pop-up frequency</span>
+                                        <output id="cube-challenge-frequency-value" for="cube-challenge-frequency-input"
+                                                class="tabular-nums text-cyan-300">Every 20 sec</output>
+                                    </span>
+                                    <input id="cube-challenge-frequency-input" type="range" min="5" max="60" step="5" value="20"
+                                           aria-label="Cube pop-up frequency in seconds"
+                                           class="mt-2 w-full accent-cyan-500">
+                                </label>
+                                <div class="flex items-center gap-2 border-t border-slate-800 pt-3">
+                                    <button id="add-cube-decoration-btn" type="button" aria-label="Add a random cube decoration"
+                                            class="rounded-lg border border-cyan-800 bg-slate-950 p-2 transition hover:border-cyan-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/70">
+                                        <span aria-hidden="true" class="grid grid-cols-3 gap-0.5 rounded border border-cyan-900 bg-slate-950 p-1">
+                                            <span class="h-2 w-2 rounded-[2px] bg-cyan-950"></span><span class="h-2 w-2 rounded-[2px] bg-cyan-700"></span><span class="h-2 w-2 rounded-[2px] bg-cyan-500"></span>
+                                            <span class="h-2 w-2 rounded-[2px] bg-cyan-800"></span><span class="h-2 w-2 rounded-[2px] bg-cyan-400"></span><span class="h-2 w-2 rounded-[2px] bg-cyan-900"></span>
+                                            <span class="h-2 w-2 rounded-[2px] bg-cyan-600"></span><span class="h-2 w-2 rounded-[2px] bg-cyan-950"></span><span class="h-2 w-2 rounded-[2px] bg-cyan-700"></span>
+                                        </span>
+                                    </button>
+                                    <button id="clear-decorations-btn" type="button" aria-label="Clear cube decorations"
+                                            class="rounded border border-slate-700 px-2 py-1.5 text-[10px] text-slate-400 hover:border-rose-500/60 hover:text-rose-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-500/60">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -80,7 +199,7 @@
         </header>
 
         <!-- Center Primary Stopwatch Readout -->
-        <section class="flex flex-col items-center justify-center my-auto text-center px-2">
+        <section class="pointer-events-none relative z-20 flex flex-col items-center justify-center my-auto text-center px-2">
             <!-- Hours Indicator (Shown dynamically when >= 1 hour, or subtle placeholder) -->
             <div id="hours-container" class="text-slate-500 text-sm sm:text-base md:text-lg tracking-widest mb-1 sm:mb-2 opacity-60 transition-opacity duration-300">
                 <span id="hours-display">00</span><span class="text-xs ml-1 text-slate-600">HRS</span>
@@ -104,7 +223,7 @@
         </section>
 
         <!-- Bottom Footer Bar (Left Telemetry + Right Reset Button) -->
-        <footer class="w-full flex items-end justify-between gap-4">
+        <footer class="relative z-20 w-full flex items-end justify-between gap-4">
             <!-- Subtle Telemetry Info -->
             <div class="text-[11px] sm:text-xs text-slate-500 space-y-1 pointer-events-none">
                 <div class="hidden sm:flex items-center space-x-2">
@@ -132,6 +251,11 @@
 
     </main>
 
+    <div id="user-decoration-layer" role="group" aria-label="Draggable cubing decorations"
+         class="pointer-events-none fixed inset-0 z-10"></div>
+    <div id="cube-challenge-layer" role="group" aria-label="Random cube challenges"
+         class="pointer-events-none fixed inset-0 z-10"></div>
+
     <!-- Application Logic -->
     <script>
         (function () {
@@ -146,12 +270,50 @@
                 isRunning: false,
                 startTime: 0,
                 elapsedTime: 0,
-                animationFrameId: null
+                animationFrameId: null,
+                cubeChallengeEnabled: false,
+                cubeChallengeTimeoutId: null,
+                cubeChallengePending: false,
+                cubeChallengeFrequency: 20,
+                cubeFactTimeouts: new Set(),
+                decorationScale: 1,
+                recentCubeFacts: [],
+                siteInfoTouchWasOpen: null,
+                backgroundColor: '#06080a',
+                visualMode: 'IDLE'
             };
 
             // DOM Elements Cache
             const elements = {
                 screenTrigger: document.getElementById('screen-trigger'),
+                siteInfoTrigger: document.getElementById('site-info-trigger'),
+                siteInfoWrapper: document.getElementById('site-info-wrapper'),
+                siteInfoPanel: document.getElementById('site-info-panel'),
+                appearanceToggle: document.getElementById('appearance-toggle'),
+                appearanceControls: document.getElementById('appearance-controls'),
+                backgroundThemeButtons: document.querySelectorAll('[data-background-theme]'),
+                backgroundColorPickerToggle: document.getElementById('background-color-picker-toggle'),
+                backgroundColorControls: document.getElementById('background-color-controls'),
+                backgroundColorPreview: document.getElementById('background-color-preview'),
+                backgroundColorHue: document.getElementById('background-color-hue'),
+                backgroundColorHueValue: document.getElementById('background-color-hue-value'),
+                backgroundColorSaturation: document.getElementById('background-color-saturation'),
+                backgroundColorSaturationValue: document.getElementById('background-color-saturation-value'),
+                backgroundColorLightness: document.getElementById('background-color-lightness'),
+                backgroundColorLightnessValue: document.getElementById('background-color-lightness-value'),
+                backgroundColorHex: document.getElementById('background-color-hex'),
+                backgroundColorError: document.getElementById('background-color-error'),
+                decorationsToggle: document.getElementById('decorations-toggle'),
+                backgroundDecorations: document.getElementById('background-decorations'),
+                decorationSizeInput: document.getElementById('decoration-size-input'),
+                decorationSizeNumber: document.getElementById('decoration-size-number'),
+                cubeChallengeToggle: document.getElementById('cube-challenge-toggle'),
+                cubeChallengeFrequencyInput: document.getElementById('cube-challenge-frequency-input'),
+                cubeChallengeFrequencyValue: document.getElementById('cube-challenge-frequency-value'),
+                cubeChallengeLayer: document.getElementById('cube-challenge-layer'),
+                addCubeDecorationBtn: document.getElementById('add-cube-decoration-btn'),
+                clearDecorationsBtn: document.getElementById('clear-decorations-btn'),
+                userDecorationLayer: document.getElementById('user-decoration-layer'),
                 resetBtn: document.getElementById('reset-btn'),
                 recordBtn: document.getElementById('record-btn'),
                 noteField: document.getElementById('note-field'),
@@ -169,6 +331,693 @@
                 ambientGlow: document.getElementById('ambient-glow'),
                 timerDisplay: document.getElementById('timer-display')
             };
+
+            const backgroundThemes = {
+                midnight: { color: '#06080a', glow: 'rgba(6,182,212,0.12)' },
+                ocean: { color: '#07131c', glow: 'rgba(56,189,248,0.16)' },
+                forest: { color: '#07140f', glow: 'rgba(52,211,153,0.14)' },
+                violet: { color: '#100b1d', glow: 'rgba(167,139,250,0.16)' }
+            };
+
+            const cubeColorPalettes = [
+                ['#083344', '#0e7490', '#155e75', '#0891b2', '#164e63', '#22d3ee'],
+                ['#0f172a', '#164e63', '#06b6d4', '#134e4a', '#0e7490', '#67e8f9'],
+                ['#082f49', '#0c4a6e', '#0369a1', '#155e75', '#0891b2', '#38bdf8']
+            ];
+            const cubeFacts = [
+                'CUBING - A standard 3x3 has 43,252,003,274,489,856,000 legal positions.',
+                'CUBING - Every legal 3x3 position is solvable in at most 20 face turns.',
+                'CUBING - A 3x3 has 8 corner pieces and 12 edge pieces.',
+                'CUBING - The six fixed centers determine the opposite-color pairs.',
+                'CUBING - CFOP stands for Cross, F2L, OLL, and PLL.',
+                'MATH - The sum of the first n positive odd numbers is n squared.',
+                'MATH - 0.999... equals 1; the repeating decimal is an infinite series.',
+                'MATH - The square root of 2 is irrational.',
+                'MATH - Consecutive Fibonacci-number ratios approach the golden ratio.',
+                "MATH - Euler's identity e^(i*pi) + 1 = 0 links five famous constants.",
+                'ALGORITHMS - Binary search finds an item in sorted data in O(log n) comparisons.',
+                "ALGORITHMS - Euclid's algorithm finds a greatest common divisor with remainders.",
+                "ALGORITHMS - Dijkstra's shortest-path algorithm requires nonnegative edge weights.",
+                'ALGORITHMS - Merge sort runs in O(n log n) time, even in the worst case.',
+                'ALGORITHMS - Quicksort is O(n log n) on average, but O(n squared) in the worst case.',
+                'QUANT FINANCE - Option delta measures sensitivity to a small change in the underlying price.',
+                'QUANT FINANCE - Black-Scholes prices European options under idealized model assumptions.',
+                'QUANT FINANCE - Risk-neutral pricing discounts expected payoffs under a risk-neutral measure.',
+                'QUANT FINANCE - Value at Risk is a loss quantile, not a worst-case loss limit.',
+                'QUANT FINANCE - Diversification can reduce asset-specific risk, not all market risk.',
+                'QUANT CAREERS - Pay may include salary and performance bonuses; it varies by firm, role, location, and experience.',
+                'CAREERS - Math and coding can lead to quant research, quant development, algorithmic trading, data science, and machine learning.',
+                'SPEEDCUBING + RESUME - Competition results, personal-best progress, coaching, or a cubing app make concrete resume examples.',
+                'SPEEDCUBING + RESUME - It can show focused practice and composure; pair it with a result or project to show transferable skills.',
+                'PHYSICS - Light travels at exactly 299,792,458 meters per second in vacuum.',
+                "PHYSICS - Planck's constant is exactly 6.62607015 x 10^-34 joule-seconds in SI.",
+                "PHYSICS - A photon's energy is E = h times its frequency.",
+                'PHYSICS - Special relativity predicts time dilation between observers in relative motion.',
+                'PHYSICS - The second law says entropy in an isolated system does not decrease.'
+            ];
+
+            function setBackgroundTheme(themeName) {
+                const theme = backgroundThemes[themeName];
+                if (!theme) {
+                    console.error('Unknown background theme:', themeName);
+                    return;
+                }
+
+                elements.ambientGlow.style.backgroundImage =
+                    `radial-gradient(circle at center, ${theme.glow} 0%, transparent 65%)`;
+                updateCustomBackgroundColor(theme.color, true);
+                elements.backgroundThemeButtons.forEach((button) => {
+                    button.setAttribute('aria-pressed', String(button.dataset.backgroundTheme === themeName));
+                });
+            }
+
+            function setDecorationScreenPosition(decoration, left, top) {
+                const initialRect = decoration.getBoundingClientRect();
+                const currentLeft = Number.parseFloat(decoration.style.left) || 0;
+                const currentTop = Number.parseFloat(decoration.style.top) || 0;
+                decoration.style.left = decoration.style.left === ''
+                    ? `${left}px`
+                    : `${currentLeft + left - initialRect.left}px`;
+                decoration.style.top = decoration.style.top === ''
+                    ? `${top}px`
+                    : `${currentTop + top - initialRect.top}px`;
+
+                for (let attempt = 0; attempt < 3; attempt += 1) {
+                    const rect = decoration.getBoundingClientRect();
+                    const shiftX = rect.left < 8
+                        ? 8 - rect.left
+                        : rect.right > window.innerWidth - 8
+                            ? window.innerWidth - 8 - rect.right
+                            : 0;
+                    const shiftY = rect.top < 8
+                        ? 8 - rect.top
+                        : rect.bottom > window.innerHeight - 8
+                            ? window.innerHeight - 8 - rect.bottom
+                            : 0;
+                    if (shiftX === 0 && shiftY === 0) return;
+                    decoration.style.left = `${(Number.parseFloat(decoration.style.left) || 0) + shiftX}px`;
+                    decoration.style.top = `${(Number.parseFloat(decoration.style.top) || 0) + shiftY}px`;
+                }
+            }
+
+            function applyDecorationTransform(decoration) {
+                const angle = Number(decoration.dataset.angle) || 0;
+                decoration.style.transform = `rotate(${angle}deg) scale(${state.decorationScale})`;
+                decoration.style.transformOrigin = 'top left';
+            }
+
+            function setRandomDecorationPosition(
+                decoration,
+                avoidElements = [],
+                maxTop = window.innerHeight
+            ) {
+                const margin = 12;
+                const bottomLimit = Math.max(margin, Math.min(window.innerHeight - margin, maxTop));
+                let bestPosition = null;
+                let smallestOverlap = Infinity;
+                for (let attempt = 0; attempt < 100; attempt += 1) {
+                    const rect = decoration.getBoundingClientRect();
+                    const maxLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+                    const maxTopPosition = Math.max(margin, bottomLimit - rect.height);
+                    const left = margin + Math.random() * Math.max(0, maxLeft - margin);
+                    const top = margin + Math.random() * Math.max(0, maxTopPosition - margin);
+                    setDecorationScreenPosition(decoration, left, top);
+                    const positionedRect = decoration.getBoundingClientRect();
+                    const overlap = avoidElements.reduce((total, element) => {
+                        const controlRect = element.getBoundingClientRect();
+                        const width = Math.max(0, Math.min(positionedRect.right, controlRect.right)
+                            - Math.max(positionedRect.left, controlRect.left));
+                        const height = Math.max(0, Math.min(positionedRect.bottom, controlRect.bottom)
+                            - Math.max(positionedRect.top, controlRect.top));
+                        return total + width * height;
+                    }, 0);
+                    if (overlap < smallestOverlap) {
+                        smallestOverlap = overlap;
+                        bestPosition = { left, top };
+                    }
+                    if (overlap === 0) return;
+                }
+                if (bestPosition) setDecorationScreenPosition(decoration, bestPosition.left, bestPosition.top);
+            }
+
+            function getDecorationAvoidElements(excludeDecoration) {
+                return [
+                    elements.screenTrigger.querySelector('header'),
+                    elements.screenTrigger.querySelector('footer'),
+                    elements.siteInfoTrigger,
+                    elements.siteInfoPanel,
+                    elements.noteField,
+                    elements.statusBadge,
+                    elements.timerDisplay,
+                    elements.actionHint,
+                    elements.resetBtn,
+                    elements.recordBtn,
+                    ...elements.userDecorationLayer.querySelectorAll('[data-user-decoration]'),
+                    ...elements.cubeChallengeLayer.querySelectorAll('[data-challenge-cube], [data-challenge-fact]')
+                ].filter((element) => element !== excludeDecoration);
+            }
+
+            function hexLuminance(color) {
+                const values = color.slice(1).match(/.{2}/g);
+                if (!values || values.length !== 3) {
+                    throw new Error(`Invalid background color: ${color}`);
+                }
+
+                const [red, green, blue] = values.map((value) => {
+                    const channel = parseInt(value, 16) / 255;
+                    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+                });
+                return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+            }
+
+            function hexToHsl(color) {
+                const [red, green, blue] = color.slice(1).match(/.{2}/g)
+                    .map((value) => parseInt(value, 16) / 255);
+                const maximum = Math.max(red, green, blue);
+                const minimum = Math.min(red, green, blue);
+                const difference = maximum - minimum;
+                const lightness = (maximum + minimum) / 2;
+                let hue = 0;
+                let saturation = 0;
+
+                if (difference > 0) {
+                    saturation = difference / (1 - Math.abs(2 * lightness - 1));
+                    if (maximum === red) {
+                        hue = ((green - blue) / difference) % 6;
+                    } else if (maximum === green) {
+                        hue = (blue - red) / difference + 2;
+                    } else {
+                        hue = (red - green) / difference + 4;
+                    }
+                    hue = (hue * 60 + 360) % 360;
+                }
+
+                return {
+                    hue: Math.round(hue) % 360,
+                    saturation: Math.round(saturation * 100),
+                    lightness: Math.round(lightness * 100)
+                };
+            }
+
+            function hslToHex(hue, saturation, lightness) {
+                const normalizedHue = ((Number(hue) % 360) + 360) % 360 / 360;
+                const normalizedSaturation = Number(saturation) / 100;
+                const normalizedLightness = Number(lightness) / 100;
+                const chroma = (1 - Math.abs(2 * normalizedLightness - 1)) * normalizedSaturation;
+                const secondary = chroma * (1 - Math.abs((normalizedHue * 6) % 2 - 1));
+                const offset = normalizedLightness - chroma / 2;
+                let channels;
+
+                if (normalizedHue < 1 / 6) {
+                    channels = [chroma, secondary, 0];
+                } else if (normalizedHue < 2 / 6) {
+                    channels = [secondary, chroma, 0];
+                } else if (normalizedHue < 3 / 6) {
+                    channels = [0, chroma, secondary];
+                } else if (normalizedHue < 4 / 6) {
+                    channels = [0, secondary, chroma];
+                } else if (normalizedHue < 5 / 6) {
+                    channels = [secondary, 0, chroma];
+                } else {
+                    channels = [chroma, 0, secondary];
+                }
+
+                return `#${channels.map((channel) => Math.round((channel + offset) * 255)
+                    .toString(16).padStart(2, '0')).join('')}`;
+            }
+
+            function updateCustomColorPickerSurface() {
+                const isLight = hexLuminance(state.backgroundColor) > 0.5;
+                elements.backgroundColorControls.style.backgroundColor = isLight
+                    ? 'rgba(248, 250, 252, 0.78)'
+                    : 'rgba(2, 6, 23, 0.78)';
+                elements.backgroundColorControls.style.borderColor = isLight
+                    ? 'rgba(15, 23, 42, 0.28)'
+                    : 'rgba(148, 163, 184, 0.35)';
+                elements.backgroundColorControls.style.color = isLight ? '#0f172a' : '#e2e8f0';
+                elements.backgroundColorHex.style.backgroundColor = isLight
+                    ? 'rgba(255, 255, 255, 0.5)'
+                    : 'rgba(2, 6, 23, 0.5)';
+                elements.backgroundColorHex.style.borderColor = isLight
+                    ? 'rgba(15, 23, 42, 0.35)'
+                    : 'rgba(148, 163, 184, 0.4)';
+                elements.backgroundColorHex.style.color = isLight ? '#0f172a' : '#f1f5f9';
+                elements.backgroundColorHex.style.colorScheme = isLight ? 'light' : 'dark';
+            }
+
+            function updateCustomBackgroundColor(color, syncSliders) {
+                document.body.style.backgroundColor = color;
+                state.backgroundColor = color;
+                elements.backgroundColorPreview.style.backgroundColor = color;
+                elements.backgroundColorHex.value = color;
+
+                if (syncSliders) {
+                    const hsl = hexToHsl(color);
+                    elements.backgroundColorHue.value = String(hsl.hue);
+                    elements.backgroundColorSaturation.value = String(hsl.saturation);
+                    elements.backgroundColorLightness.value = String(hsl.lightness);
+                }
+
+                elements.backgroundColorHueValue.value = `${elements.backgroundColorHue.value}°`;
+                elements.backgroundColorSaturationValue.value = `${elements.backgroundColorSaturation.value}%`;
+                elements.backgroundColorLightnessValue.value = `${elements.backgroundColorLightness.value}%`;
+                elements.backgroundColorError.hidden = true;
+                elements.backgroundColorHex.setAttribute('aria-invalid', 'false');
+                updateCustomColorPickerSurface();
+                applyTimerContrast();
+                elements.backgroundThemeButtons.forEach((button) => {
+                    button.setAttribute('aria-pressed', 'false');
+                });
+            }
+
+            function contrastRatio(firstColor, secondColor) {
+                const first = hexLuminance(firstColor);
+                const second = hexLuminance(secondColor);
+                return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+            }
+
+            function applyTimerContrast() {
+                const background = state.backgroundColor;
+                const light = '#f1f5f9';
+                const dark = '#0f172a';
+                const mainColor = contrastRatio(light, background) >= contrastRatio(dark, background)
+                    ? light
+                    : dark;
+                const statusColors = {
+                    IDLE: '#22d3ee',
+                    RUNNING: '#34d399',
+                    PAUSED: '#fbbf24'
+                };
+                const preferredAccent = statusColors[state.visualMode];
+                const accentColor = contrastRatio(preferredAccent, background) >= 3
+                    ? preferredAccent
+                    : mainColor;
+
+                elements.minutesDisplay.style.color = mainColor;
+                elements.secondsDisplay.style.color = mainColor;
+                elements.msDisplay.style.color = accentColor;
+                elements.colonSeparator.style.color = mainColor;
+                elements.hoursContainer.style.color = mainColor;
+            }
+
+            function setSiteInfoPanelOpen(isOpen) {
+                elements.siteInfoPanel.classList.toggle('visible', isOpen);
+                elements.siteInfoPanel.classList.toggle('invisible', !isOpen);
+                elements.siteInfoPanel.classList.toggle('opacity-100', isOpen);
+                elements.siteInfoPanel.classList.toggle('opacity-0', !isOpen);
+            }
+
+            function closeSiteInfoPanelOnFocusout() {
+                if (!elements.siteInfoWrapper.matches(':focus-within')) {
+                    setSiteInfoPanelOpen(false);
+                }
+            }
+
+            function createCubeGrid() {
+                const cube = document.createElement('span');
+                cube.className = 'grid grid-cols-3 gap-1 rounded-md bg-slate-950/70 p-1.5 shadow-[0_0_16px_rgba(34,211,238,0.18)]';
+                cube.style.gridTemplateColumns = 'repeat(3, 12px)';
+                cube.style.gridTemplateRows = 'repeat(3, 12px)';
+                cube.setAttribute('aria-hidden', 'true');
+                const palette = cubeColorPalettes[Math.floor(Math.random() * cubeColorPalettes.length)];
+                const stickers = [];
+
+                for (let index = 0; index < 9; index += 1) {
+                    const sticker = document.createElement('span');
+                    sticker.dataset.cubeSticker = 'true';
+                    sticker.className = 'block h-3 w-3 shrink-0 rounded-[3px] shadow-[0_0_8px_rgba(34,211,238,0.28)]';
+                    sticker.style.backgroundColor = palette[Math.floor(Math.random() * palette.length)];
+                    stickers.push(sticker);
+                    cube.appendChild(sticker);
+                }
+
+                return { cube, stickers };
+            }
+
+            function chooseRandomItem(items, excludedItems = []) {
+                const availableItems = items.filter((item) => !excludedItems.includes(item));
+                const choices = availableItems.length > 0 ? availableItems : items;
+                return choices[Math.floor(Math.random() * choices.length)];
+            }
+
+            function applyDecorationSize() {
+                const size = Number(elements.decorationSizeInput.value);
+                const minimum = Number(elements.decorationSizeInput.min);
+                const maximum = Number(elements.decorationSizeInput.max);
+                if (!Number.isFinite(size) || size < minimum || size > maximum) {
+                    console.error('Invalid decoration size:', elements.decorationSizeInput.value);
+                    return;
+                }
+
+                state.decorationScale = size / 100;
+                elements.decorationSizeNumber.value = String(size);
+            }
+
+            function makeDecorationDraggable(
+                decoration,
+                onClick,
+                onDrag = function () {},
+                onRemove = function () {},
+                onDragEnd = function () {}
+            ) {
+                let activePointerId = null;
+                let pointerOffsetX = 0;
+                let pointerOffsetY = 0;
+                let pointerStartX = 0;
+                let pointerStartY = 0;
+                let hasDragged = false;
+                let suppressClick = false;
+
+                decoration.addEventListener('pointerdown', function (event) {
+                    if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+                    event.stopPropagation();
+                    suppressClick = false;
+                    activePointerId = event.pointerId;
+                    pointerStartX = event.clientX;
+                    pointerStartY = event.clientY;
+                    const rect = decoration.getBoundingClientRect();
+                    pointerOffsetX = event.clientX - rect.left;
+                    pointerOffsetY = event.clientY - rect.top;
+                    decoration.setPointerCapture(event.pointerId);
+                });
+
+                decoration.addEventListener('pointermove', function (event) {
+                    if (event.pointerId !== activePointerId) return;
+                    if (!hasDragged && Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY) < 5) return;
+                    hasDragged = true;
+                    decoration.classList.replace('cursor-grab', 'cursor-grabbing');
+                    setDecorationScreenPosition(
+                        decoration,
+                        event.clientX - pointerOffsetX,
+                        event.clientY - pointerOffsetY
+                    );
+                    onDrag();
+                });
+
+                function finishDragging(event) {
+                    if (event.pointerId !== activePointerId) return;
+                    activePointerId = null;
+                    decoration.classList.replace('cursor-grabbing', 'cursor-grab');
+                    const didDrag = hasDragged;
+                    if (didDrag && event.type === 'pointerup') {
+                        suppressClick = true;
+                        const titleRect = elements.siteInfoTrigger.getBoundingClientRect();
+                        if (event.clientX >= titleRect.left
+                            && event.clientX <= titleRect.right
+                            && event.clientY >= titleRect.top
+                            && event.clientY <= titleRect.bottom) {
+                            decoration.remove();
+                            onRemove();
+                        }
+                    }
+                    hasDragged = false;
+                    if (decoration.hasPointerCapture(event.pointerId)) {
+                        decoration.releasePointerCapture(event.pointerId);
+                    }
+                    if (didDrag) onDragEnd(event);
+                }
+
+                decoration.addEventListener('pointerup', finishDragging);
+                decoration.addEventListener('pointercancel', finishDragging);
+                decoration.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    if (suppressClick && event.detail > 0) {
+                        suppressClick = false;
+                        return;
+                    }
+                    suppressClick = false;
+                    onClick(event);
+                });
+
+                if (decoration.tagName !== 'BUTTON') {
+                    decoration.addEventListener('keydown', function (event) {
+                        const step = event.shiftKey ? 32 : 12;
+                        const rect = decoration.getBoundingClientRect();
+                        let left = rect.left;
+                        let top = rect.top;
+
+                        if (event.key === 'ArrowLeft') left -= step;
+                        else if (event.key === 'ArrowRight') left += step;
+                        else if (event.key === 'ArrowUp') top -= step;
+                        else if (event.key === 'ArrowDown') top += step;
+                        else if (event.key === 'Delete' || event.key === 'Backspace') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            decoration.remove();
+                            return;
+                        } else if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            decoration.click();
+                            return;
+                        } else {
+                            return;
+                        }
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setDecorationScreenPosition(decoration, left, top);
+                    });
+                }
+            }
+
+            function addDecoration() {
+                const decoration = document.createElement('div');
+                decoration.dataset.userDecoration = 'cube';
+                decoration.dataset.angle = String(Math.round(Math.random() * 40 - 20));
+                decoration.className = 'pointer-events-auto fixed z-10 flex select-none touch-none items-center rounded-lg border border-cyan-500/60 bg-slate-950/90 p-2 text-xs text-cyan-200 shadow-lg shadow-black/30 cursor-grab';
+                decoration.tabIndex = 0;
+                decoration.setAttribute('role', 'group');
+                decoration.setAttribute(
+                    'aria-label',
+                    "Rubik's cube decoration. Drag to move, drop on the website title to remove, use arrow keys when focused, or press Delete to remove."
+                );
+                applyDecorationTransform(decoration);
+                const { cube } = createCubeGrid();
+                decoration.appendChild(cube);
+
+                makeDecorationDraggable(decoration, function () {
+                    toggleStopwatch();
+                });
+
+                elements.userDecorationLayer.appendChild(decoration);
+                setRandomDecorationPosition(decoration, getDecorationAvoidElements(decoration));
+            }
+
+            function scheduleCubeChallengeRemoval(element, delay) {
+                const timeoutId = window.setTimeout(function () {
+                    state.cubeFactTimeouts.delete(timeoutId);
+                    element.remove();
+                    spawnPendingCubeChallenge();
+                }, delay);
+                state.cubeFactTimeouts.add(timeoutId);
+            }
+
+            function pauseCubeFactDismissal() {
+                state.cubeFactTimeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
+                state.cubeFactTimeouts.clear();
+            }
+
+            function positionCubeFactCard(factCard, cubeButton) {
+                const cubeRect = cubeButton.getBoundingClientRect();
+                const factRect = factCard.getBoundingClientRect();
+                const margin = 8;
+                const gap = 8;
+                const maxLeft = Math.max(margin, window.innerWidth - factRect.width - margin);
+                const maxTop = Math.max(margin, window.innerHeight - factRect.height - margin);
+                const preferredSide = cubeRect.left + cubeRect.width / 2 > window.innerWidth / 2
+                    ? 'left'
+                    : 'right';
+                const sideOrder = [preferredSide, preferredSide === 'left' ? 'right' : 'left'];
+                const avoidElements = getDecorationAvoidElements(factCard);
+                const candidates = [];
+                for (const side of sideOrder) {
+                    const left = side === 'right'
+                        ? cubeRect.right + gap
+                        : cubeRect.left - factRect.width - gap;
+                    if (left < margin || left > maxLeft || cubeRect.top + factRect.height > window.innerHeight - margin) {
+                        continue;
+                    }
+                    candidates.push({ left, top: Math.max(margin, Math.min(cubeRect.top, maxTop)) });
+                }
+
+                if (candidates.length === 0) {
+                    const left = Math.max(margin, Math.min(cubeRect.left, maxLeft));
+                    const above = cubeRect.top - factRect.height - gap;
+                    const below = cubeRect.bottom + gap;
+                    if (below <= maxTop) {
+                        candidates.push({ left, top: below });
+                    }
+                    if (above >= margin) {
+                        candidates.push({ left, top: above });
+                    }
+                }
+                if (candidates.length === 0) {
+                    candidates.push({
+                        left: Math.max(margin, Math.min(cubeRect.left, maxLeft)),
+                        top: Math.max(margin, Math.min(cubeRect.top, maxTop))
+                    });
+                }
+
+                let bestPosition = { ...candidates[0], overlap: Infinity };
+                for (const candidate of candidates) {
+                    const { left, top } = candidate;
+                    const overlap = avoidElements.reduce((total, element) => {
+                        const rect = element.getBoundingClientRect();
+                        const width = Math.max(0, Math.min(left + factRect.width, rect.right) - Math.max(left, rect.left));
+                        const height = Math.max(0, Math.min(top + factRect.height, rect.bottom) - Math.max(top, rect.top));
+                        return total + width * height;
+                    }, 0);
+
+                    if (overlap < bestPosition.overlap) {
+                        bestPosition = { left, top, overlap };
+                    }
+                }
+
+                factCard.style.left = `${bestPosition.left}px`;
+                factCard.style.top = `${bestPosition.top}px`;
+            }
+
+            function scheduleNextCubeChallenge() {
+                if (state.cubeChallengeTimeoutId !== null) {
+                    window.clearTimeout(state.cubeChallengeTimeoutId);
+                    state.cubeChallengeTimeoutId = null;
+                }
+                if (!state.cubeChallengeEnabled) return;
+                state.cubeChallengeTimeoutId = window.setTimeout(function () {
+                    state.cubeChallengeTimeoutId = null;
+                    if (!state.cubeChallengeEnabled) return;
+                    const existingCube = elements.cubeChallengeLayer.querySelector('[data-challenge-cube]');
+                    if (existingCube) {
+                        if (existingCube.dataset.solved === 'true') {
+                            state.cubeChallengePending = true;
+                        }
+                        return;
+                    }
+                    spawnCubeChallenge();
+                    scheduleNextCubeChallenge();
+                }, state.cubeChallengeFrequency * 1000);
+            }
+
+            function spawnPendingCubeChallenge() {
+                if (!state.cubeChallengeEnabled || !state.cubeChallengePending) return;
+                if (elements.cubeChallengeLayer.querySelector('[data-challenge-cube], [data-challenge-fact]')) return;
+                state.cubeChallengePending = false;
+                spawnCubeChallenge();
+                scheduleNextCubeChallenge();
+            }
+
+            function showCubeFact(cubeButton) {
+                const fact = chooseRandomItem(cubeFacts, state.recentCubeFacts);
+                state.recentCubeFacts.push(fact);
+                if (state.recentCubeFacts.length > 5) {
+                    state.recentCubeFacts.shift();
+                }
+
+                const factCard = document.createElement('div');
+                factCard.dataset.challengeFact = 'true';
+                factCard.className = 'pointer-events-auto fixed z-10 w-56 max-w-[calc(100vw-16px)] rounded-lg border border-cyan-500/60 bg-slate-950/95 p-3 text-xs leading-relaxed text-cyan-100 shadow-xl shadow-cyan-950/40';
+                factCard.setAttribute('role', 'status');
+                factCard.setAttribute('aria-live', 'polite');
+                factCard.textContent = `FUN FACT: ${fact}`;
+                factCard.style.transform = 'none';
+                elements.cubeChallengeLayer.appendChild(factCard);
+                positionCubeFactCard(factCard, cubeButton);
+                scheduleCubeChallengeRemoval(factCard, 6500);
+                scheduleCubeChallengeRemoval(cubeButton, 6500);
+                scheduleNextCubeChallenge();
+            }
+
+            function spawnCubeChallenge() {
+                if (!state.cubeChallengeEnabled) return;
+
+                const existingCubes = elements.cubeChallengeLayer.querySelectorAll('[data-challenge-cube]');
+                if (existingCubes.length > 0) return;
+
+                const cubeButton = document.createElement('button');
+                cubeButton.type = 'button';
+                cubeButton.dataset.challengeCube = 'true';
+                cubeButton.dataset.angle = '0';
+                cubeButton.className = 'pointer-events-auto fixed z-10 inline-flex aspect-square items-center justify-center touch-none cursor-grab rounded-md border-0 bg-transparent p-1 shadow-[0_0_20px_rgba(34,211,238,0.18)] transition-shadow hover:shadow-[0_0_26px_rgba(34,211,238,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70';
+                cubeButton.setAttribute('aria-label', 'Click to solve this cube and reveal a fun fact');
+                cubeButton.style.visibility = 'hidden';
+                cubeButton.style.pointerEvents = 'none';
+                applyDecorationTransform(cubeButton);
+                const { cube, stickers } = createCubeGrid();
+                cubeButton.appendChild(cube);
+                makeDecorationDraggable(cubeButton, function (event) {
+                    event.stopPropagation();
+                    if (cubeButton.dataset.solved === 'true') return;
+                    cubeButton.dataset.solved = 'true';
+                    cubeButton.setAttribute('aria-label', "Solved cube; a Rubik's cube fun fact is shown nearby");
+                    stickers.forEach((sticker) => {
+                        sticker.style.transition = 'background-color 500ms ease';
+                        sticker.style.backgroundColor = '#22d3ee';
+                    });
+                    showCubeFact(cubeButton);
+                }, function () {
+                    const factCard = elements.cubeChallengeLayer.querySelector('[data-challenge-fact]');
+                    if (!factCard) return;
+                    if (state.cubeFactTimeouts.size > 0) pauseCubeFactDismissal();
+                    positionCubeFactCard(factCard, cubeButton);
+                }, function () {
+                    const factCard = elements.cubeChallengeLayer.querySelector('[data-challenge-fact]');
+                    if (factCard) factCard.remove();
+                    spawnPendingCubeChallenge();
+                }, function () {
+                    if (!cubeButton.isConnected) return;
+                    const factCard = elements.cubeChallengeLayer.querySelector('[data-challenge-fact]');
+                    if (!factCard) return;
+                    scheduleCubeChallengeRemoval(factCard, 6500);
+                    scheduleCubeChallengeRemoval(cubeButton, 6500);
+                });
+                cubeButton.addEventListener('keydown', function (event) {
+                    if (event.code === 'Space' || event.code === 'Enter') event.stopPropagation();
+                });
+
+                elements.cubeChallengeLayer.appendChild(cubeButton);
+                const avoidElements = getDecorationAvoidElements(cubeButton);
+                setRandomDecorationPosition(
+                    cubeButton,
+                    avoidElements,
+                    window.innerHeight - 12
+                );
+                window.requestAnimationFrame(function () {
+                    if (!cubeButton.isConnected || cubeButton.dataset.solved === 'true') return;
+                    setRandomDecorationPosition(
+                        cubeButton,
+                        getDecorationAvoidElements(cubeButton),
+                        window.innerHeight - 12
+                    );
+                    cubeButton.style.visibility = 'visible';
+                    cubeButton.style.pointerEvents = '';
+                });
+            }
+
+            function setCubeChallengeEnabled(enabled) {
+                state.cubeChallengeEnabled = enabled;
+                elements.cubeChallengeToggle.checked = enabled;
+                if (state.cubeChallengeTimeoutId !== null) {
+                    window.clearTimeout(state.cubeChallengeTimeoutId);
+                    state.cubeChallengeTimeoutId = null;
+                }
+                state.cubeChallengePending = false;
+                state.cubeFactTimeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
+                state.cubeFactTimeouts.clear();
+                elements.cubeChallengeLayer.replaceChildren();
+
+                if (!enabled) return;
+                spawnCubeChallenge();
+                scheduleNextCubeChallenge();
+            }
+
+            function updateCubeChallengeFrequency() {
+                state.cubeChallengeFrequency = Number(elements.cubeChallengeFrequencyInput.value);
+                elements.cubeChallengeFrequencyValue.textContent =
+                    `Every ${state.cubeChallengeFrequency} sec`;
+
+                scheduleNextCubeChallenge();
+            }
 
             /**
              * Pads a number with leading zeros up to targetLength
@@ -239,6 +1088,7 @@
              * @param {'IDLE'|'RUNNING'|'PAUSED'} mode
              */
             function updateVisualState(mode) {
+                state.visualMode = mode;
                 // Reset dynamic classes
                 elements.screenTrigger.classList.remove(
                     'border-slate-800/80',
@@ -298,6 +1148,7 @@
                     elements.actionHint.textContent = '[ CLICK ANYWHERE OR PRESS SPACE TO START ]';
                     elements.ambientGlow.className = 'absolute inset-0 pointer-events-none transition-all duration-700 opacity-30 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.12)_0%,transparent_65%)]';
                 }
+                applyTimerContrast();
             }
 
             /**
@@ -386,6 +1237,159 @@
                 toggleStopwatch();
             });
 
+            elements.siteInfoTrigger.addEventListener('pointerdown', function (event) {
+                if (event.pointerType === 'touch') {
+                    state.siteInfoTouchWasOpen = elements.siteInfoPanel.classList.contains('visible');
+                }
+            });
+
+            elements.siteInfoTrigger.addEventListener('pointercancel', function () {
+                state.siteInfoTouchWasOpen = null;
+            });
+
+            elements.siteInfoTrigger.addEventListener('click', function (event) {
+                event.stopPropagation();
+                if (state.siteInfoTouchWasOpen !== null) {
+                    setSiteInfoPanelOpen(!state.siteInfoTouchWasOpen);
+                    state.siteInfoTouchWasOpen = null;
+                }
+            });
+
+            elements.siteInfoTrigger.addEventListener('keydown', function (event) {
+                event.stopPropagation();
+            });
+
+            elements.siteInfoWrapper.addEventListener('pointerenter', function (event) {
+                if (event.pointerType === 'mouse') {
+                    setSiteInfoPanelOpen(true);
+                }
+            });
+
+            elements.siteInfoWrapper.addEventListener('pointerleave', function (event) {
+                if (event.pointerType === 'mouse') {
+                    setSiteInfoPanelOpen(false);
+                }
+            });
+
+            elements.siteInfoWrapper.addEventListener('focusin', function () {
+                if (state.siteInfoTouchWasOpen !== null) return;
+                setSiteInfoPanelOpen(true);
+            });
+
+            elements.siteInfoWrapper.addEventListener('focusout', closeSiteInfoPanelOnFocusout);
+
+            window.addEventListener('pointerdown', function (event) {
+                if (event.pointerType === 'touch'
+                    && !elements.siteInfoWrapper.contains(event.target)
+                    && elements.siteInfoPanel.classList.contains('visible')) {
+                    setSiteInfoPanelOpen(false);
+                }
+            });
+
+            elements.siteInfoPanel.addEventListener('click', function (event) {
+                event.stopPropagation();
+            });
+
+            elements.siteInfoPanel.addEventListener('keydown', function (event) {
+                event.stopPropagation();
+            });
+
+            elements.appearanceToggle.addEventListener('click', function () {
+                const expanded = elements.appearanceToggle.getAttribute('aria-expanded') === 'true';
+                elements.appearanceToggle.setAttribute('aria-expanded', String(!expanded));
+                elements.appearanceControls.hidden = expanded;
+                if (expanded) {
+                    elements.backgroundColorPickerToggle.setAttribute('aria-expanded', 'false');
+                    elements.backgroundColorControls.hidden = true;
+                }
+            });
+
+            elements.backgroundColorPickerToggle.addEventListener('click', function () {
+                const expanded = elements.backgroundColorPickerToggle.getAttribute('aria-expanded') === 'true';
+                elements.backgroundColorPickerToggle.setAttribute('aria-expanded', String(!expanded));
+                elements.backgroundColorControls.hidden = expanded;
+            });
+
+            elements.backgroundThemeButtons.forEach((button) => {
+                button.addEventListener('click', function () {
+                    setBackgroundTheme(button.dataset.backgroundTheme);
+                });
+            });
+
+            [elements.backgroundColorHue, elements.backgroundColorSaturation, elements.backgroundColorLightness]
+                .forEach((input) => {
+                    input.addEventListener('input', function () {
+                        updateCustomBackgroundColor(hslToHex(
+                            elements.backgroundColorHue.value,
+                            elements.backgroundColorSaturation.value,
+                            elements.backgroundColorLightness.value
+                        ), false);
+                    });
+                });
+
+            elements.backgroundColorHex.addEventListener('input', function () {
+                const color = elements.backgroundColorHex.value.trim().toLowerCase();
+                if (!/^#[0-9a-f]{6}$/.test(color)) {
+                    elements.backgroundColorHex.setAttribute('aria-invalid', 'true');
+                    elements.backgroundColorError.hidden = false;
+                    return;
+                }
+                updateCustomBackgroundColor(color, true);
+            });
+
+            elements.decorationsToggle.addEventListener('change', function () {
+                elements.backgroundDecorations.hidden = !elements.decorationsToggle.checked;
+            });
+
+            elements.decorationSizeInput.addEventListener('input', applyDecorationSize);
+
+            elements.decorationSizeNumber.addEventListener('change', function () {
+                const size = Number(elements.decorationSizeNumber.value);
+                const minimum = Number(elements.decorationSizeInput.min);
+                const maximum = Number(elements.decorationSizeInput.max);
+                if (!Number.isFinite(size) || size < minimum || size > maximum) {
+                    console.error('Invalid decoration size:', elements.decorationSizeNumber.value);
+                    elements.decorationSizeNumber.value = elements.decorationSizeInput.value;
+                    return;
+                }
+
+                elements.decorationSizeInput.value = String(size);
+                applyDecorationSize();
+            });
+
+            elements.cubeChallengeToggle.addEventListener('change', function () {
+                setCubeChallengeEnabled(elements.cubeChallengeToggle.checked);
+            });
+
+            elements.cubeChallengeFrequencyInput.addEventListener('input', updateCubeChallengeFrequency);
+
+            elements.addCubeDecorationBtn.addEventListener('click', function () {
+                addDecoration();
+            });
+
+            elements.clearDecorationsBtn.addEventListener('click', function () {
+                elements.userDecorationLayer.replaceChildren();
+            });
+
+            window.addEventListener('resize', function () {
+                elements.userDecorationLayer.querySelectorAll('[data-user-decoration]').forEach((decoration) => {
+                    const rect = decoration.getBoundingClientRect();
+                    setDecorationScreenPosition(decoration, rect.left, rect.top);
+                });
+                const challengeCube = elements.cubeChallengeLayer.querySelector('[data-challenge-cube]');
+                const factCard = elements.cubeChallengeLayer.querySelector('[data-challenge-fact]');
+                if (challengeCube) {
+                    const rect = challengeCube.getBoundingClientRect();
+                    setDecorationScreenPosition(challengeCube, rect.left, rect.top);
+                }
+                if (factCard && challengeCube) {
+                    positionCubeFactCard(factCard, challengeCube);
+                } else if (factCard) {
+                    const rect = factCard.getBoundingClientRect();
+                    setDecorationScreenPosition(factCard, rect.left, rect.top);
+                }
+            });
+
             elements.noteField.addEventListener('click', function (event) {
                 event.stopPropagation();
             });
@@ -427,6 +1431,8 @@
             window.addEventListener('keydown', function (event) {
                 // Ignore if modifier keys (Ctrl, Cmd, Alt) are held
                 if (event.ctrlKey || event.metaKey || event.altKey) return;
+                if (event.target instanceof Element
+                    && event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
 
                 if (event.code === 'Space') {
                     event.preventDefault(); // Prevent page scroll
@@ -437,10 +1443,15 @@
                 } else if (event.code === 'KeyT') {
                     event.preventDefault();
                     recordAndResetStopwatch(event);
+                } else if (!event.repeat && /^[a-z]$/i.test(event.key)) {
+                    event.preventDefault();
+                    toggleStopwatch();
                 }
             });
 
             // Initialize initial IDLE state
+            setBackgroundTheme('midnight');
+            applyDecorationSize();
             renderTime(0);
             updateVisualState('IDLE');
         })();
